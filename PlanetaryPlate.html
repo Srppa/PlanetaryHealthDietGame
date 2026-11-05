@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Planetary Plate – sort the foods</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    /* =====================================================================
+   1. ADJUSTABLE STYLE SETTINGS  (fonts, colours, spacing)
+   ===================================================================== */
+    :root {
+      color-scheme: dark;
+
+      /* ---- font sizes ---- */
+      --font-title: clamp(40px, 7vw, 84px);
+      /* "PLANETARY HEALTH DIET" */
+      --font-subtitle: clamp(15px, 2vw, 24px);
+      /* line under the title     */
+      --font-wheel-label: 16px;
+      /* category names on wheel (SVG units) */
+      --font-wheel-hint: 6px;
+      /* small grey hint under them (SVG units) */
+      --font-card-name: 14px;
+      /* food name in the pool   */
+      --font-card-icon: 40px;
+      /* food picture in the pool */
+      --font-placed-icon: 24px;
+      /* pictures placed on wheel (SVG units) */
+      --font-status: 16px;
+      /* score + messages        */
+
+      /* ---- colours ---- */
+      --bg: #1f4d3a;
+      --bg-deep: #173c2d;
+      --ink: #ffffff;
+      --muted: #b9d3c6;
+      --accent: #f7c922;
+      --good: #7ddc8c;
+      --bad: #ff6b5e;
+      --plate: #f1ece0;
+
+      /* ---- layout ---- */
+      --pool-width: 380px;
+      /* width of the food pool on the right */
+      --card-min: 104px;
+      /* minimum width of a food card         */
+      --gap: 24px;
+    }
+
+    /* =====================================================================
+   2. PAGE LAYOUT
+   ===================================================================== */
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-padding-top: env(safe-area-inset-top, 0px);
+    }
+
+    :root {
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Inter", system-ui, sans-serif;
+      overflow: hidden;
+    }
+
+    header {
+      text-align: center;
+      height: 20vh;
+    }
+
+    h1 {
+      margin: 0;
+      padding-top: 50px;
+      font-family: "Archivo Black", Impact, sans-serif;
+      font-size: var(--font-title);
+      line-height: .95;
+      text-transform: uppercase;
+    }
+
+    .subtitle {
+      margin: 16px auto 0;
+      font-size: var(--font-subtitle);
+    }
+
+    .subtitle b {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+
+    main {
+      display: flex;
+      padding: 16px var(--gap) 40px;
+      max-width: 100%;
+      max-height: 80vh;
+      margin: 0 auto;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ---- language switch ---- */
+    .lang {
+      position: absolute;
+      top: 20px;
+      right: 00px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+      margin: 0 auto;
+      padding: 0 var(--gap);
+    }
+
+    .lang button {
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 2px solid var(--muted);
+      background: transparent;
+      color: var(--ink);
+      font: 700 14px "Inter", sans-serif;
+      cursor: pointer;
+    }
+
+    .lang button[aria-pressed="true"] {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #1b2a22;
+    }
+
+    .lang button:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* ---- wheel ---- */
+    #wheel {
+      width: 75%;
+      max-height: 50%;
+      margin-left: -75px;
+      height: auto;
+      display: block;
+    }
+
+    .wedge {
+      cursor: pointer;
+      transition: filter .15s;
+    }
+
+    .wedge:hover,
+    .wedge.hover {
+      filter: brightness(1.18);
+    }
+
+    .wedge.flash-bad {
+      animation: flash-bad .5s;
+    }
+
+    .wedge.flash-good {
+      animation: flash-good .5s;
+    }
+
+    @keyframes flash-bad {
+      40% {
+        fill: var(--bad);
+      }
+    }
+
+    @keyframes flash-good {
+      40% {
+        fill: var(--good);
+      }
+    }
+
+    /* ---- category labels (built from the HTML template in CONFIG.labelTemplate) ---- */
+    .label-object {
+      pointer-events: none;
+      overflow: visible;
+    }
+
+    .label-wrap {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .label-name {
+      font-size: var(--font-wheel-label);
+      font-weight: 800;
+      line-height: 1.15;
+      color: var(--ink);
+    }
+
+    .label-hint {
+      font-size: var(--font-wheel-hint);
+      line-height: 1.3;
+      margin-top: 2px;
+      color: var(--muted);
+    }
+
+    .label-hint:empty {
+      display: none;
+    }
+
+    /* Style one category on its own using its id, e.g.:
+   .label-dairy .label-name { color: var(--accent); }                        */
+    .placed {
+      font-size: var(--font-placed-icon);
+      pointer-events: none;
+    }
+
+    /* ---- pool ---- */
+    aside {
+      background: var(--bg-deep);
+      width: 25%;
+      border-radius: 20px;
+      padding: 16px;
+    }
+
+    .status {
+      display: flex;
+      justify-content: space-between;
+      font-size: var(--font-status);
+      margin-bottom: 8px;
+    }
+
+    .status b {
+      color: var(--accent);
+    }
+
+    #message {
+      min-height: 1.5em;
+      font-size: var(--font-status);
+      color: var(--muted);
+      margin: 0 0 12px;
+    }
+
+    #message.good {
+      color: var(--good);
+    }
+
+    #message.bad {
+      color: var(--bad);
+    }
+
+    #pool {
+      display: grid;
+      gap: 10px;
+      max-height: 56vh;
+      overflow-y: auto;
+      padding: 2px;
+      grid-template-columns: repeat(auto-fill, minmax(var(--card-min), 1fr));
+    }
+
+    .card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      background: var(--plate);
+      color: #1b2a22;
+      border: 3px solid transparent;
+      border-radius: 14px;
+      padding: 10px 6px;
+      cursor: grab;
+      font: inherit;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+    }
+
+    .card:focus-visible,
+    .card.selected {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .card .icon {
+      font-size: var(--font-card-icon);
+      line-height: 1;
+    }
+
+    .card img {
+      width: var(--font-card-icon);
+      height: var(--font-card-icon);
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    .card .name {
+      font-size: var(--font-card-name);
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .card.shake {
+      animation: shake .4s;
+    }
+
+    @keyframes shake {
+      25% {
+        transform: translateX(-6px);
+      }
+
+      75% {
+        transform: translateX(6px);
+      }
+    }
+
+    button.restart {
+      margin-top: 12px;
+      width: 100%;
+      padding: 10px;
+      border: 0;
+      border-radius: 999px;
+      background: var(--accent);
+      color: #1b2a22;
+      font: 700 15px "Inter", sans-serif;
+      cursor: pointer;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <div class="lang" role="group" aria-label="Language">
+      <button data-lang="en">EN</button>
+      <button data-lang="cs">CZ</button>
+    </div>
+    <h1 id="title">Planetary<br>Health Diet</h1>
+    <p class="subtitle" id="subtitle"></p>
+  </header>
+
+  <main>
+    <svg id="wheel" role="img" aria-label="Plate divided into food groups"></svg>
+
+    <aside>
+      <div class="status">
+        <span><span id="lblSorted">Sorted</span> <b id="placedCount">0</b> / <b id="totalCount">0</b></span>
+        <span><span id="lblMistakes">Mistakes</span> <b id="mistakes">0</b></span>
+      </div>
+      <p id="message">Drag a food onto the plate, or tap a food and then tap a section.</p>
+      <div id="pool"></div>
+      <button class="restart" id="restart">Start over</button>
+    </aside>
+  </main>
+
+  <script>
+    /* =====================================================================
+       3. ADJUSTABLE GAME SETTINGS
+       ===================================================================== */
+    const CONFIG = {
+      wheelRadius: 150,   // size of the plate (SVG units)
+      plateRim: 5,    // cream border around the plate
+      marginX: 280,   // empty space left/right of the plate, used for labels
+      marginY: 90,   // empty space above/below the plate
+      labelDistance: 70,    // how far the labels sit from the plate edge (try 26 for close, 90 for far)
+      showLeaderLines: true, // draw a thin line from each section to its label
+      leaderLineWidth: 2,    // thickness of that line
+      labelPadding: 8,    // small gap between the end of the line and the text
+      startAngle: -45,   // rotates the whole plate, in degrees. 0 = first section starts at the top, positive = clockwise
+
+      // ---- label template ----
+      // Every category label is built from this HTML. Placeholders:
+      //   {label} translated name   {hint} translated hint (empty if showHints is false)
+      //   {id} category id (use it for per-category CSS classes)
+      // A category can override it with its own `template: "..."` field in CATEGORIES.
+      labelTemplate: `
+    <div class="label-box label-{id}">
+      <div class="label-name">{label}</div>
+      <div class="label-hint">{hint}</div>
+    </div>`,
+      labelWidth: 260,      // size of the label box (SVG units); text wraps inside it
+      labelHeight: 70,
+      dividerWidth: 3,     // thin gap line between sections
+      showHints: true,  // show the small grey description under each label
+      defaultLanguage: "auto", // "en", "cs", or "auto" (Czech if the browser is set to Czech)
+
+      // how placed food pictures are arranged inside a section
+      placedStartRadius: 0.86,  // first picture sits at 86 % of the radius
+      placedRowStep: 0.11,  // each next row moves 11 % of the radius inward
+      twoColumnsAbove: 40,    // sections wider than this (degrees) use 2 columns
+    };
+
+    /* =====================================================================
+       4. CATEGORIES  –  edit `degrees` to resize a section.
+       Order = clockwise, starting at the top. Degrees should add up to 360
+       (they are scaled automatically if they don't).
+       ===================================================================== */
+    const CATEGORIES = [
+      {id: "grains", label: "Whole Grains", hint: "Brown rice, corn, whole wheat",   degrees: 50, color: "#c79a5b"},
+      {id: "starchy", label: "Starchy Vegetables", hint: "Limit portions",           degrees: 35, color: "#b98b4a"},
+      {id: "oils", label: "Unsaturated Plant Oils", hint: "",                        degrees: 5, color: "#8fa14a"},
+      {id: "sugarsalt", label: "Added Sugars & Salt", hint: "Minimal",               degrees: 5, color: "#6a8fb0"},
+      {id: "animal", label: "Animal Protein", hint: "Fish, chicken, red meat, eggs", degrees: 15, color: "#b4684f"},
+      {id: "dairy", label: "Dairy Foods", hint: "",                                  degrees: 15, color: "#e3cf98"},
+      {id: "plant", label: "Plant Protein", hint: "Legumes, soy, tree nuts",         degrees: 50, color: "#9a6b3f"},
+      {id: "veg", label: "Vegetables & Fruits", hint: "Eat every day",               degrees: 180, color: "#5e9a4f"},
+    ];
+
+    /* =====================================================================
+       5. FOOD DATABASE
+       `emoji` is used as the picture. To use a real photo instead, add
+       `image: "data:image/png;base64,..."` (or any embedded data URI).
+       ===================================================================== */
+    const FOODS = [
+      // Vegetables & Fruits
+      {name: "Broccoli", emoji: "🥦", category: "veg"},
+      {name: "Carrot", emoji: "🥕", category: "veg"},
+      {name: "Apple", emoji: "🍎", category: "veg"},
+      {name: "Strawberries", emoji: "🍓", category: "veg"},
+      {name: "Tomato", emoji: "🍅", category: "veg"},
+      {name: "Eggplant", emoji: "🍆", category: "veg"},
+      {name: "Orange", emoji: "🍊", category: "veg"},
+      {name: "Leafy greens", emoji: "🥬", category: "veg"},
+      // Whole grains
+      {name: "Whole-wheat bread", emoji: "🍞", category: "grains"},
+      {name: "Brown rice", emoji: "🍚", category: "grains"},
+      {name: "Corn", emoji: "🌽", category: "grains"},
+      {name: "Oatmeal", emoji: "🥣", category: "grains"},
+      {name: "Whole-grain pasta", emoji: "🍝", category: "grains"},
+      // Starchy vegetables
+      {name: "Potato", emoji: "🥔", category: "starchy"},
+      {name: "Sweet potato", emoji: "🍠", category: "starchy"},
+      {name: "Cassava", emoji: "🫚", category: "starchy"},
+      // Plant protein
+      {name: "Beans", emoji: "🫘", category: "plant"},
+      {name: "Peanuts", emoji: "🥜", category: "plant"},
+      {name: "Walnuts", emoji: "🌰", category: "plant"},
+      {name: "Edamame", emoji: "🫛", category: "plant"},
+      // Unsaturated oils
+      {name: "Olive oil", emoji: "🫒", category: "oils"},
+      {name: "Sunflower oil", emoji: "🌻", category: "oils"},
+      {name: "Rapeseed oil", emoji: "🌼", category: "oils"},
+      // Added sugars & salt
+      {name: "Candy", emoji: "🍬", category: "sugarsalt"},
+      {name: "Donut", emoji: "🍩", category: "sugarsalt"},
+      {name: "Salt", emoji: "🧂", category: "sugarsalt"},
+      {name: "Soda", emoji: "🥤", category: "sugarsalt"},
+      {name: "Cookies", emoji: "🍪", category: "sugarsalt"},
+      // Animal protein
+      {name: "Fish", emoji: "🐟", category: "animal"},
+      {name: "Chicken", emoji: "🍗", category: "animal"},
+      {name: "Beef", emoji: "🥩", category: "animal"},
+      {name: "Eggs", emoji: "🥚", category: "animal"},
+      {name: "Shrimp", emoji: "🦐", category: "animal"},
+      // Dairy
+      {name: "Milk", emoji: "🥛", category: "dairy"},
+      {name: "Cheese", emoji: "🧀", category: "dairy"},
+      {name: "Butter", emoji: "🧈", category: "dairy"},
+    ].map((food, i) => ({...food, id: "food" + i}));
+
+    /* =====================================================================
+       6. GAME CODE  (no need to edit below to change sizes or fonts)
+       ===================================================================== */
+    /* =====================================================================
+       5b. LANGUAGES
+       - UI texts: edit the `UI` object (one entry per language).
+       - Category names, hints and food names are written in English above;
+         their other-language versions are looked up in `TRANSLATIONS`
+         (English text -> translated text). A missing entry falls back to English.
+       - To add a language: add it to UI, TRANSLATIONS and a button in the header.
+       ===================================================================== */
+    const UI = {
+      en: {
+        pageTitle: "Planetary Plate – sort the foods",
+        title: "Planetary Health Diet",
+        subtitle: "Different foods. <b>Different colors.</b> Drag each food onto its place on the plate.",
+        sorted: "Sorted",
+        mistakes: "Mistakes",
+        restart: "Start over",
+        intro: "Drag a food onto the plate, or tap a food and then tap a section.",
+        wheelAria: "Plate divided into food groups",
+        correct: (food, group) => `Yes! ${food} belongs to ${group}.`,
+        wrong: (food, group) => `${food} doesn’t belong to ${group}. Try another section.`,
+        won: (n) => `All sorted with ${n} mistake${n === 1 ? "" : "s"}. Well done!`,
+      },
+      cs: {
+        pageTitle: "Planetární talíř – roztřiď potraviny",
+        title: "Planetární zdravá strava",
+        subtitle: "Různé potraviny. <b>Různé barvy.</b> Přetáhni každou potravinu na její místo na talíři.",
+        sorted: "Roztříděno",
+        mistakes: "Chyby",
+        restart: "Začít znovu",
+        intro: "Přetáhni potravinu na talíř, nebo na ni klepni a pak klepni na výseč.",
+        wheelAria: "Talíř rozdělený na skupiny potravin",
+        correct: (food, group) => `Správně! ${food} patří do skupiny „${group}“.`,
+        wrong: (food, group) => `${food} nepatří do skupiny „${group}“. Zkus jinou výseč.`,
+        won: (n) => `Hotovo! Počet chyb: ${n}. Skvělá práce!`,
+      },
+    };
+
+    const TRANSLATIONS = {
+      cs: {
+        // categories
+        "Whole Grains": "Celozrnné obiloviny",
+        "Starchy Vegetables": "Škrobová zelenina",
+        "Unsaturated Plant Oils": "Nenasycené rostlinné oleje",
+        "Added Sugars & Salt": "Přidaný cukr a sůl",
+        "Animal Protein": "Živočišné bílkoviny",
+        "Dairy Foods": "Mléčné výrobky",
+        "Plant Protein": "Rostlinné bílkoviny",
+        "Vegetables & Fruits": "Zelenina a ovoce",
+        // hints
+        "Brown rice, corn, whole wheat": "Hnědá rýže, kukuřice, celozrnná pšenice",
+        "Limit portions": "Omezit porce",
+        "Minimal": "Minimálně",
+        "Fish, chicken, red meat, eggs": "Ryby, drůbež, červené maso, vejce",
+        "Legumes, soy, tree nuts": "Luštěniny, sója, ořechy",
+        "Eat every day": "Jíst každý den",
+        // foods
+        "Broccoli": "Brokolice", "Carrot": "Mrkev", "Apple": "Jablko", "Strawberries": "Jahody",
+        "Tomato": "Rajče", "Eggplant": "Lilek", "Orange": "Pomeranč", "Leafy greens": "Listová zelenina",
+        "Whole-wheat bread": "Celozrnný chléb", "Brown rice": "Hnědá rýže", "Corn": "Kukuřice",
+        "Oatmeal": "Ovesná kaše", "Whole-grain pasta": "Celozrnné těstoviny",
+        "Potato": "Brambora", "Sweet potato": "Batát", "Cassava": "Maniok",
+        "Beans": "Fazole", "Peanuts": "Arašídy", "Walnuts": "Vlašské ořechy", "Edamame": "Edamame",
+        "Olive oil": "Olivový olej", "Sunflower oil": "Slunečnicový olej", "Rapeseed oil": "Řepkový olej",
+        "Candy": "Bonbony", "Donut": "Donut", "Salt": "Sůl", "Soda": "Limonáda", "Cookies": "Sušenky",
+        "Fish": "Ryba", "Chicken": "Kuřecí maso", "Beef": "Hovězí maso", "Eggs": "Vejce", "Shrimp": "Krevety",
+        "Milk": "Mléko", "Cheese": "Sýr", "Butter": "Máslo",
+      },
+    };
+
+    let currentLang = CONFIG.defaultLanguage === "auto"
+      ? ((navigator.language || "").toLowerCase().startsWith("cs") ? "cs" : "en")
+      : CONFIG.defaultLanguage;
+
+    const ui = () => UI[currentLang];                                        // UI texts in the current language
+    const tr = (text) => TRANSLATIONS[currentLang]?.[text] ?? text;          // translate a category/hint/food name
+
+    // Put the current language into all fixed texts of the page
+    function applyStaticText() {
+      document.documentElement.lang = currentLang;
+      document.title = ui().pageTitle;
+      document.getElementById("title").innerHTML = ui().title;
+      document.getElementById("subtitle").innerHTML = ui().subtitle;
+      document.getElementById("lblSorted").textContent = ui().sorted;
+      document.getElementById("lblMistakes").textContent = ui().mistakes;
+      document.getElementById("restart").textContent = ui().restart;
+      document.getElementById("wheel").setAttribute("aria-label", ui().wheelAria);
+      document.querySelectorAll(".lang button").forEach((b) =>
+        b.setAttribute("aria-pressed", b.dataset.lang === currentLang));
+    }
+
+    // Switch language without losing the current game
+    function setLanguage(lang) {
+      currentLang = lang;
+      applyStaticText();
+      buildWheel();
+      renderPool();
+      say(ui().intro);
+    }
+
+    const SVG_NS = "http://www.w3.org/2000/svg";
+    const $ = (id) => document.getElementById(id);
+
+    const R = CONFIG.wheelRadius;
+    const CX = CONFIG.marginX + R;
+    const CY = CONFIG.marginY + R;
+
+    let pool = [];            // foods still waiting on the right
+    let placed = {};          // categoryId -> foods already on the plate
+    let selectedId = null;    // food picked by tap/click
+    let mistakes = 0;
+
+    /* ---------- geometry helpers ---------- */
+    // angle 0 = top, increasing clockwise
+    function polar(radius, deg) {
+      const rad = (deg - 90) * Math.PI / 180;
+      return {x: CX + radius * Math.cos(rad), y: CY + radius * Math.sin(rad)};
+    }
+    function wedgePath(startDeg, endDeg) {
+      const a = polar(R, startDeg), b = polar(R, endDeg);
+      const large = endDeg - startDeg > 180 ? 1 : 0;
+      return `M ${CX} ${CY} L ${a.x} ${a.y} A ${R} ${R} 0 ${large} 1 ${b.x} ${b.y} Z`;
+    }
+    function svgEl(tag, attrs = {}, parent) {
+      const el = document.createElementNS(SVG_NS, tag);
+      for (const k in attrs) el.setAttribute(k, attrs[k]);
+      if (parent) parent.appendChild(el);
+      return el;
+    }
+
+    /* ---------- compute section angles ---------- */
+    const totalDegrees = CATEGORIES.reduce((sum, c) => sum + c.degrees, 0);
+
+
+    let cursor = CONFIG.startAngle;
+    CATEGORIES.forEach((c) => {
+      c.start = cursor;
+      c.end = cursor + c.degrees * 360 / totalDegrees;
+      c.mid = (c.start + c.end) / 2;
+      cursor = c.end;
+    });
+
+    /* ---------- draw the static wheel ---------- */
+    const svg = $("wheel");
+    svg.setAttribute("viewBox", `0 0 ${2 * CX} ${2 * CY}`);
+
+    function buildWheel() {
+      svg.innerHTML = "";
+      svgEl("circle", {cx: CX, cy: CY, r: R + CONFIG.plateRim, fill: "var(--plate)"}, svg);
+
+      CATEGORIES.forEach((c) => {
+        const path = svgEl("path", {
+          d: wedgePath(c.start, c.end), fill: c.color, class: "wedge",
+          stroke: "var(--plate)", "stroke-width": CONFIG.dividerWidth, "stroke-linejoin": "round",
+        }, svg);
+        c.el = path;
+        path.addEventListener("dragover", (e) => {e.preventDefault(); path.classList.add("hover");});
+        path.addEventListener("dragleave", () => path.classList.remove("hover"));
+        path.addEventListener("drop", (e) => {
+          e.preventDefault(); path.classList.remove("hover");
+          tryPlace(e.dataTransfer.getData("text/plain"), c);
+        });
+        path.addEventListener("click", () => {if (selectedId) tryPlace(selectedId, c);});
+      });
+
+      CATEGORIES.forEach(drawLabel);
+      CATEGORIES.forEach(drawPlaced);
+    }
+
+    function drawLabel(c) {
+
+      let origialPlateRim;
+      let originalLebelDistance;
+
+      if(c.id == "oils"){
+        CONFIG.labelDistance = CONFIG.labelDistance + 20
+      }
+
+
+      const edge = polar(R + CONFIG.plateRim, c.mid); // where the line starts (plate edge)
+      const end = polar(R + CONFIG.plateRim + CONFIG.labelDistance, c.mid); // where the line ends (label)
+
+
+
+      
+
+      
+                  
+      
+      const side = Math.sin(c.mid * Math.PI / 180);   // > 0 right side, < 0 left side
+      const vert = Math.cos(c.mid * Math.PI / 180);   // > 0 top, < 0 bottom
+      const anchor = side > 0.3 ? "start" : side < -0.3 ? "end" : "middle";
+
+      if (CONFIG.showLeaderLines) {
+        svgEl("line", {
+          x1: edge.x, y1: edge.y, x2: end.x, y2: end.y,
+          stroke: "var(--muted)", "stroke-width": CONFIG.leaderLineWidth, "stroke-linecap": "round"
+        }, svg);
+      }
+
+      // the label is an HTML box (foreignObject) filled from the template
+      const pad = CONFIG.showLeaderLines ? CONFIG.labelPadding : 0;
+      const W = CONFIG.labelWidth, H = CONFIG.labelHeight;
+      let x, y, align, justify, textAlign;   // box position + how the content sits inside it
+      if (anchor === "start") {x = end.x + pad; y = end.y - H / 2; align = "flex-start"; justify = "center"; textAlign = "left";}
+      else if (anchor === "end") {x = end.x - pad - W; y = end.y - H / 2; align = "flex-end"; justify = "center"; textAlign = "right";}
+      else if (vert < 0) {x = end.x - W / 2; y = end.y + pad; align = "center"; justify = "flex-start"; textAlign = "center";} // below the plate
+      else {x = end.x - W / 2; y = end.y - pad - H; align = "center"; justify = "flex-end"; textAlign = "center";} // above the plate
+
+      const data = {id: c.id, label: tr(c.label), hint: CONFIG.showHints ? tr(c.hint || "") : ""};
+      const template = c.template || CONFIG.labelTemplate;
+      const html = template.replace(/\{(\w+)\}/g, (_, key) => data[key] ?? "");
+
+      const box = svgEl("foreignObject", {x, y, width: W, height: H, class: "label-object"}, svg);
+      box.innerHTML = `<div class="label-wrap" style="align-items:${align}; justify-content:${justify}; text-align:${textAlign}">${html}</div>`;
+
+      if(c.id == "oils"){
+        CONFIG.labelDistance = CONFIG.labelDistance - 20
+      }
+
+    }
+
+    function drawPlaced(c) {
+      const span = c.end - c.start;
+      const columns = span >= CONFIG.twoColumnsAbove ? 2 : 1;
+      (placed[c.id] || []).forEach((food, k) => {
+        const row = Math.floor(k / columns), col = k % columns;
+        const radius = R * Math.max(0.2, CONFIG.placedStartRadius - CONFIG.placedRowStep * row);
+        const offset = columns === 2 ? (col ? 1 : -1) * span * 0.22 : 0;
+        const p = polar(radius, c.mid + offset);
+        const t = svgEl("text", {x: p.x, y: p.y, "text-anchor": "middle", "dominant-baseline": "central", class: "placed"}, svg);
+        t.textContent = food.emoji;
+        const title = svgEl("title", {}, t); title.textContent = tr(food.name);
+      });
+    }
+
+    /* ---------- pool of foods ---------- */
+    function renderPool() {
+      const el = $("pool");
+      el.innerHTML = "";
+      pool.forEach((food) => {
+        const card = document.createElement("button");
+        card.className = "card" + (food.id === selectedId ? " selected" : "");
+        card.draggable = true;
+        card.dataset.id = food.id;
+        card.innerHTML = (food.image ? `<img src="${food.image}" alt="">` : `<span class="icon">${food.emoji}</span>`) +
+          `<span class="name">${tr(food.name)}</span>`;
+        card.addEventListener("dragstart", (e) => {e.dataTransfer.setData("text/plain", food.id); select(food.id);});
+        card.addEventListener("click", () => select(food.id === selectedId ? null : food.id));
+        el.appendChild(card);
+      });
+      $("placedCount").textContent = FOODS.length - pool.length;
+      $("totalCount").textContent = FOODS.length;
+      $("mistakes").textContent = mistakes;
+    }
+
+    function select(id) {
+      selectedId = id;
+      document.querySelectorAll(".card").forEach((c) => c.classList.toggle("selected", c.dataset.id === id));
+    }
+
+    function say(text, kind = "") {const m = $("message"); m.textContent = text; m.className = kind;}
+
+    function flash(el, cls) {el.classList.remove(cls); void el.getBBox(); el.classList.add(cls);}
+
+    /* ---------- placing a food ---------- */
+    function tryPlace(foodId, category) {
+      const food = pool.find((f) => f.id === foodId);
+      if (!food) return;
+
+      if (food.category === category.id) {
+        pool = pool.filter((f) => f.id !== foodId);
+        (placed[category.id] ||= []).push(food);
+        selectedId = null;
+        flash(category.el, "flash-good");
+        buildWheel(); renderPool();
+        say(pool.length ? ui().correct(tr(food.name), tr(category.label)) : ui().won(mistakes), "good");
+      } else {
+        mistakes++;
+        flash(category.el, "flash-bad");
+        const card = document.querySelector(`.card[data-id="${foodId}"]`);
+        if (card) {card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake");}
+        $("mistakes").textContent = mistakes;
+        say(ui().wrong(tr(food.name), tr(category.label)), "bad");
+      }
+    }
+
+    /* ---------- start / restart ---------- */
+    function newGame() {
+      pool = [...FOODS].sort(() => Math.random() - 0.5);
+      placed = {}; mistakes = 0; selectedId = null;
+      say(ui().intro);
+      buildWheel(); renderPool();
+    }
+    $("restart").addEventListener("click", newGame);
+    document.querySelectorAll(".lang button").forEach((b) =>
+      b.addEventListener("click", () => setLanguage(b.dataset.lang)));
+    applyStaticText();
+    newGame();
+  </script>
+</body>
+
+</html>
