@@ -10,8 +10,8 @@
     rel="stylesheet">
   <style>
     /* =====================================================================
-   1. ADJUSTABLE STYLE SETTINGS  (fonts, colours, spacing)
-   ===================================================================== */
+       1. ADJUSTABLE STYLE SETTINGS  (fonts, colours, spacing)
+       ===================================================================== */
     :root {
       color-scheme: dark;
 
@@ -19,19 +19,19 @@
       --font-title: clamp(40px, 7vw, 84px);
       /* "PLANETARY HEALTH DIET" */
       --font-subtitle: clamp(15px, 2vw, 24px);
-      /* line under the title     */
+      /* line under the title */
       --font-wheel-label: 16px;
       /* category names on wheel (SVG units) */
       --font-wheel-hint: 6px;
       /* small grey hint under them (SVG units) */
       --font-card-name: 14px;
-      /* food name in the pool   */
+      /* food name in the pool */
       --font-card-icon: 40px;
-      /* food picture in the pool */
+      /* food picture (emoji) in the pool */
       --font-placed-icon: 24px;
       /* pictures placed on wheel (SVG units) */
       --font-status: 16px;
-      /* score + messages        */
+      /* score + messages */
 
       /* ---- colours ---- */
       --bg: #1f4d3a;
@@ -47,26 +47,22 @@
       --pool-width: 380px;
       /* width of the food pool on the right */
       --card-min: 104px;
-      /* minimum width of a food card         */
+      /* minimum width of a food card */
       --gap: 24px;
+
+      /* ---- info popup ---- */
+      --popup-width: 460px;
+      --font-popup-title: 28px;
+      --font-popup-text: 16px;
+      --font-popup-icon: 96px;
+      /* emoji size, only used if the photo fails to load */
+      --popup-photo-height: 240px;
+      /* height of the Wikipedia photo */
     }
 
     /* =====================================================================
-   2. PAGE LAYOUT
-   ===================================================================== */
-    * {
-      box-sizing: border-box;
-    }
-
-    html {
-      scroll-padding-top: env(safe-area-inset-top, 0px);
-    }
-
-    :root {
-      padding-top: env(safe-area-inset-top, 0px);
-      padding-bottom: env(safe-area-inset-bottom, 0px);
-    }
-
+       2. PAGE LAYOUT
+       ===================================================================== */
     body {
       margin: 0;
       min-height: 100%;
@@ -100,7 +96,6 @@
       font-weight: 700;
     }
 
-
     main {
       display: flex;
       padding: 16px var(--gap) 40px;
@@ -116,11 +111,77 @@
       }
     }
 
+    /* ---- info popup (double-click a food or a section) ---- */
+    .card,
+    .wedge {
+      touch-action: manipulation;
+    }
+
+    dialog#popup {
+      width: 40%;
+      padding: 0;
+      border: 0;
+      border-radius: 20px;
+      background: var(--bg-deep);
+      color: var(--ink);
+      font-size: var(--font-popup-text);
+      line-height: 1.5;
+    }
+
+    dialog#popup::backdrop {
+      background: rgba(0, 0, 0, .6);
+    }
+
+    #popupBody {
+      padding: 35px;
+    }
+
+    #popupBody h2 {
+      margin: 8px 0;
+      font-family: "Archivo Black", Impact, sans-serif;
+      font-size: var(--font-popup-title);
+      line-height: 1.1;
+      text-transform: uppercase;
+    }
+
+    #popupBody p {
+      margin: 8px 0;
+      color: var(--muted);
+    }
+
+    .popup-close {
+      position: absolute;
+      top: 2px;
+      right: 9px;
+      background: none;
+      border: 0;
+      color: var(--ink);
+      font-size: 30px;
+      cursor: pointer;
+    }
+
+    .popup-food {
+      text-align: center;
+    }
+
+    .popup-icon {
+      font-size: var(--font-popup-icon);
+      line-height: 1.1;
+    }
+
+    .popup-photo {
+      width: 100%;
+      height: var(--popup-photo-height);
+      object-fit: cover;
+      border-radius: 14px;
+      background: var(--plate);
+    }
+
     /* ---- language switch ---- */
     .lang {
       position: absolute;
       top: 20px;
-      right: 00px;
+      right: 0;
       display: flex;
       justify-content: flex-end;
       gap: 6px;
@@ -219,8 +280,7 @@
       display: none;
     }
 
-    /* Style one category on its own using its id, e.g.:
-   .label-dairy .label-name { color: var(--accent); }                        */
+    /* Style one category on its own using its id, e.g.:  .label-dairy .label-name { color: var(--accent); } */
     .placed {
       font-size: var(--font-placed-icon);
       pointer-events: none;
@@ -229,7 +289,6 @@
     /* ---- pool ---- */
     aside {
       background: var(--bg-deep);
-      width: 25%;
       border-radius: 20px;
       padding: 16px;
     }
@@ -266,7 +325,8 @@
       max-height: 56vh;
       overflow-y: auto;
       padding: 2px;
-      grid-template-columns: repeat(auto-fill, minmax(var(--card-min), 1fr));
+      padding-right: 15px;
+      grid-template-columns: repeat(3, 1fr);
     }
 
     .card {
@@ -296,13 +356,6 @@
     .card .icon {
       font-size: var(--font-card-icon);
       line-height: 1;
-    }
-
-    .card img {
-      width: var(--font-card-icon);
-      height: var(--font-card-icon);
-      object-fit: cover;
-      border-radius: 8px;
     }
 
     .card .name {
@@ -365,26 +418,31 @@
         <span><span id="lblSorted">Sorted</span> <b id="placedCount">0</b> / <b id="totalCount">0</b></span>
         <span><span id="lblMistakes">Mistakes</span> <b id="mistakes">0</b></span>
       </div>
-      <p id="message">Drag a food onto the plate, or tap a food and then tap a section.</p>
+      <p id="message"></p>
       <div id="pool"></div>
       <button class="restart" id="restart">Start over</button>
     </aside>
   </main>
+
+  <dialog id="popup">
+    <button class="popup-close" aria-label="Close / Zavřít">&times;</button>
+    <div id="popupBody"></div>
+  </dialog>
 
   <script>
     /* =====================================================================
        3. ADJUSTABLE GAME SETTINGS
        ===================================================================== */
     const CONFIG = {
-      wheelRadius: 150,   // size of the plate (SVG units)
-      plateRim: 5,    // cream border around the plate
-      marginX: 280,   // empty space left/right of the plate, used for labels
-      marginY: 90,   // empty space above/below the plate
-      labelDistance: 70,    // how far the labels sit from the plate edge (try 26 for close, 90 for far)
+      wheelRadius: 150,      // size of the plate (SVG units)
+      plateRim: 5,           // cream border around the plate
+      marginX: 280,          // empty space left/right of the plate, used for labels
+      marginY: 90,           // empty space above/below the plate
+      labelDistance: 70,     // how far the labels sit from the plate edge (try 26 for close, 90 for far)
       showLeaderLines: true, // draw a thin line from each section to its label
       leaderLineWidth: 2,    // thickness of that line
-      labelPadding: 8,    // small gap between the end of the line and the text
-      startAngle: -45,   // rotates the whole plate, in degrees. 0 = first section starts at the top, positive = clockwise
+      labelPadding: 8,       // small gap between the end of the line and the text
+      startAngle: -45,       // rotates the whole plate, in degrees. 0 = first section starts at the top, positive = clockwise
 
       // ---- label template ----
       // Every category label is built from this HTML. Placeholders:
@@ -396,102 +454,109 @@
       <div class="label-name">{label}</div>
       <div class="label-hint">{hint}</div>
     </div>`,
-      labelWidth: 260,      // size of the label box (SVG units); text wraps inside it
+      labelWidth: 260,       // size of the label box (SVG units); text wraps inside it
       labelHeight: 70,
-      dividerWidth: 3,     // thin gap line between sections
-      showHints: true,  // show the small grey description under each label
+      dividerWidth: 3,       // thin gap line between sections
+      showHints: true,       // show the small grey description under each label
       defaultLanguage: "auto", // "en", "cs", or "auto" (Czech if the browser is set to Czech)
+      doubleClickDelay: 250, // ms to wait after a click on a section, so a double-click opens the popup instead of placing a food
+
+      // ---- food data ----
+      csvUrl: "",            // optional: path/URL of a CSV file to load instead of the embedded one (needs a web server, e.g. "sustainable_foods_czech.csv")
+      popupImageWidth: 600,  // width (px) requested from Wikipedia for the popup photo; smaller = faster
 
       // how placed food pictures are arranged inside a section
-      placedStartRadius: 0.86,  // first picture sits at 86 % of the radius
-      placedRowStep: 0.11,  // each next row moves 11 % of the radius inward
-      twoColumnsAbove: 40,    // sections wider than this (degrees) use 2 columns
+      placedStartRadius: 0.86, // first picture sits at 86 % of the radius
+      placedRowStep: 0.11,     // each next row moves 11 % of the radius inward
+      twoColumnsAbove: 40,     // sections wider than this (degrees) use 2 columns
     };
 
     /* =====================================================================
        4. CATEGORIES  –  edit `degrees` to resize a section.
        Order = clockwise, starting at the top. Degrees should add up to 360
        (they are scaled automatically if they don't).
+       The `id` must match the `category` column of the CSV.
        ===================================================================== */
     const CATEGORIES = [
-      {id: "grains", label: "Whole Grains", hint: "",   degrees: 50, color: "#c79a5b"},
-      {id: "starchy", label: "Starchy Vegetables", hint: "",           degrees: 35, color: "#b98b4a"},
-      {id: "oils", label: "Unsaturated Plant Oils", hint: "",                        degrees: 5, color: "#8fa14a"},
-      {id: "sugarsalt", label: "Added Sugars & Salt", hint: "",               degrees: 5, color: "#6a8fb0"},
-      {id: "animal", label: "Animal Protein", hint: "", degrees: 15, color: "#b4684f"},
-      {id: "dairy", label: "Dairy Foods", hint: "",                                  degrees: 15, color: "#e3cf98"},
-      {id: "plant", label: "Plant Protein", hint: "",         degrees: 50, color: "#9a6b3f"},
-      {id: "veg", label: "Vegetables & Fruits", hint: "",               degrees: 180, color: "#5e9a4f"},
+      { id: "grains", label: "Whole Grains", hint: "", degrees: 50, color: "#c79a5b" },
+      { id: "starchy", label: "Starchy Vegetables", hint: "", degrees: 35, color: "#b98b4a" },
+      { id: "oils", label: "Unsaturated Plant Oils", hint: "", degrees: 5, color: "#8fa14a" },
+      { id: "sugarsalt", label: "Added Sugars & Salt", hint: "", degrees: 5, color: "#6a8fb0" },
+      { id: "animal", label: "Animal Protein", hint: "", degrees: 15, color: "#b4684f" },
+      { id: "dairy", label: "Dairy Foods", hint: "", degrees: 15, color: "#e3cf98" },
+      { id: "plant", label: "Plant Protein", hint: "", degrees: 50, color: "#9a6b3f" },
+      { id: "veg", label: "Vegetables & Fruits", hint: "", degrees: 180, color: "#5e9a4f" },
     ];
 
     /* =====================================================================
-       5. FOOD DATABASE
-       `emoji` is used as the picture. To use a real photo instead, add
-       `image: "data:image/png;base64,..."` (or any embedded data URI).
+       5. FOOD DATABASE  –  ONE CSV for everything about the foods
+       Columns: name, czech_name, emoji, category, additional_info,
+                czech_additional_info, wikipedia_image_url
+       - emoji = picture on the cards and on the plate
+       - wikipedia_image_url = photo in the popup (falls back to the emoji)
+       Replace the text between the backticks with your own CSV, or set
+       CONFIG.csvUrl to load a CSV file instead.
        ===================================================================== */
-    const FOODS = [
-      // Vegetables & Fruits
-      {name: "Broccoli", emoji: "🥦", category: "veg"},
-      {name: "Carrot", emoji: "🥕", category: "veg"},
-      {name: "Apple", emoji: "🍎", category: "veg"},
-      {name: "Strawberries", emoji: "🍓", category: "veg"},
-      {name: "Tomato", emoji: "🍅", category: "veg"},
-      {name: "Eggplant", emoji: "🍆", category: "veg"},
-      {name: "Orange", emoji: "🍊", category: "veg"},
-      {name: "Leafy greens", emoji: "🥬", category: "veg"},
-      // Whole grains
-      {name: "Whole-wheat bread", emoji: "🍞", category: "grains"},
-      {name: "Brown rice", emoji: "🍚", category: "grains"},
-      {name: "Corn", emoji: "🌽", category: "grains"},
-      {name: "Oatmeal", emoji: "🥣", category: "grains"},
-      {name: "Whole-grain pasta", emoji: "🍝", category: "grains"},
-      // Starchy vegetables
-      {name: "Potato", emoji: "🥔", category: "starchy"},
-      {name: "Sweet potato", emoji: "🍠", category: "starchy"},
-      {name: "Cassava", emoji: "🫚", category: "starchy"},
-      // Plant protein
-      {name: "Beans", emoji: "🫘", category: "plant"},
-      {name: "Peanuts", emoji: "🥜", category: "plant"},
-      {name: "Walnuts", emoji: "🌰", category: "plant"},
-      {name: "Edamame", emoji: "🫛", category: "plant"},
-      // Unsaturated oils
-      {name: "Olive oil", emoji: "🫒", category: "oils"},
-      {name: "Sunflower oil", emoji: "🌻", category: "oils"},
-      {name: "Rapeseed oil", emoji: "🌼", category: "oils"},
-      // Added sugars & salt
-      {name: "Candy", emoji: "🍬", category: "sugarsalt"},
-      {name: "Donut", emoji: "🍩", category: "sugarsalt"},
-      {name: "Salt", emoji: "🧂", category: "sugarsalt"},
-      {name: "Soda", emoji: "🥤", category: "sugarsalt"},
-      {name: "Cookies", emoji: "🍪", category: "sugarsalt"},
-      // Animal protein
-      {name: "Fish", emoji: "🐟", category: "animal"},
-      {name: "Chicken", emoji: "🍗", category: "animal"},
-      {name: "Beef", emoji: "🥩", category: "animal"},
-      {name: "Eggs", emoji: "🥚", category: "animal"},
-      {name: "Shrimp", emoji: "🦐", category: "animal"},
-      // Dairy
-      {name: "Milk", emoji: "🥛", category: "dairy"},
-      {name: "Cheese", emoji: "🧀", category: "dairy"},
-      {name: "Butter", emoji: "🧈", category: "dairy"},
-    ].map((food, i) => ({...food, id: "food" + i}));
+    const FOODS_CSV = `
+name,czech_name,emoji,category,additional_info,czech_additional_info,wikipedia_image_url
+Broccoli,Brokolice,🥦,veg,"Generally low environmental impact, especially when seasonal and locally produced; relatively low land use and emissions compared with animal foods.","Obvykle má nízkou ekologickou stopu, zejména při sezónním a místním pěstování. Ve srovnání s masem vyžaduje málo půdy a má nízké emise.",https://en.wikipedia.org/wiki/Special:Redirect/file/Broccoli.jpg
+Carrot,Mrkev,🥕,veg,Generally low-impact food with low greenhouse-gas emissions and land use; storage and transport can add impacts.,"Má obvykle nízkou ekologickou stopu. Vliv může zvyšovat skladování, chlazení, zavlažování a doprava na dlouhé vzdálenosti.",https://en.wikipedia.org/wiki/Special:Redirect/file/Carrot.jpg
+Apple,Jablko,🍎,veg,"Generally low-impact fruit; orchards can have biodiversity benefits, but pesticides, irrigation, cold storage and long-distance transport can increase impacts.","Obvykle má nízkou ekologickou stopu. Dopad mohou zvyšovat pesticidy, zavlažování, chlazené skladování a dovoz z velké vzdálenosti.",https://en.wikipedia.org/wiki/Special:Redirect/file/Apple.jpg
+Strawberries,Jahody,🍓,veg,"Usually low-impact compared with animal foods, but impacts can rise with heated greenhouses, intensive irrigation, refrigeration and air freight.","Ve srovnání s živočišnými potravinami mají většinou nízkou stopu, ale vytápěné skleníky, intenzivní zavlažování, chlazení a letecká doprava ji mohou výrazně zvýšit.",https://en.wikipedia.org/wiki/Special:Redirect/file/Strawberry.jpg
+Tomato,Rajče,🍅,veg,Low impact when grown outdoors in season; heated greenhouse production can have substantially higher energy-related emissions.,Při sezónním venkovním pěstování má relativně nízkou stopu. Rajčata z vytápěných skleníků mohou mít kvůli spotřebě energie výrazně vyšší emise.,https://en.wikipedia.org/wiki/Special:Redirect/file/Tomato.jpg
+Eggplant,Lilek,🍆,veg,Generally low-impact vegetable; greenhouse heating and irrigation can increase environmental impacts depending on production region.,Obvykle jde o potravinu s nízkou ekologickou stopou. Dopad může růst při pěstování ve vytápěných sklenících a při vysoké spotřebě vody.,https://en.wikipedia.org/wiki/Special:Redirect/file/Eggplant.jpg
+Orange,Pomeranč,🍊,veg,"Generally low-impact fruit; irrigation can be important in water-stressed regions, while long-distance refrigerated transport adds some impact.",Obvykle má nízkou ekologickou stopu. Významný může být dopad zavlažování v suchých oblastech a chlazené dopravy.,https://en.wikipedia.org/wiki/Special:Redirect/file/Orange.jpg
+Leafy greens,Listová zelenina,🥬,veg,"Usually low-impact and land-efficient, particularly seasonal outdoor production; heated greenhouses and refrigerated transport can increase impacts.","Listová zelenina má obvykle nízkou ekologickou stopu, zejména při sezónním venkovním pěstování. Vyšší dopad může mít vytápění skleníků a chlazení.",https://en.wikipedia.org/wiki/Special:Redirect/file/Leaf%20vegetable.jpg
+Whole-wheat bread,Celozrnný pšeničný chléb,🍞,grains,"Lower-impact staple when made mainly from whole grains; wheat production is generally much less emissions-intensive than meat, though fertilizer use and processing contribute impacts.","Celozrnný chléb má obecně nižší ekologickou stopu než živočišné potraviny. Dopad pšenice souvisí zejména s používáním hnojiv, půdou a zpracováním.",https://en.wikipedia.org/wiki/Special:Redirect/file/Whole%20wheat%20bread.jpg
+Brown rice,Hnědá rýže,🍚,grains,Whole-grain rice is nutritious but can have relatively high climate impact among plant foods because flooded rice fields emit methane; water and land use also matter.,"Rýže je rostlinná potravina, ale její pěstování může mít relativně vysoké emise kvůli metanu vznikajícímu na zaplavených rýžových polích. Důležitá je také spotřeba vody.",https://en.wikipedia.org/wiki/Special:Redirect/file/Brown%20rice.jpg
+Corn,Kukuřice,🌽,grains,"Generally lower-impact than animal foods, but intensive production can involve fertilizer, pesticides and irrigation; impacts vary greatly by production system and whether used as food or feed.","Kukuřice má obvykle nižší dopad než živočišné potraviny, ale intenzivní pěstování může vyžadovat hnojiva, pesticidy a zavlažování.",https://en.wikipedia.org/wiki/Special:Redirect/file/Maize.jpg
+Oatmeal,Ovesná kaše,🥣,grains,Typically a low-impact staple with relatively low greenhouse-gas emissions and land use compared with animal-based foods.,Ovesná kaše patří mezi potraviny s relativně nízkou ekologickou stopou a obvykle má nízké emise a nároky na půdu ve srovnání s živočišnými potravinami.,https://en.wikipedia.org/wiki/Special:Redirect/file/Oatmeal.jpg
+Whole-grain pasta,Celozrnné těstoviny,🍝,grains,Generally low-impact when based on wheat; whole-grain versions provide more dietary fiber while having similar production impacts to other wheat pasta.,"Celozrnné těstoviny mají obecně nízkou ekologickou stopu. Hlavní dopady souvisejí s pěstováním pšenice, zejména s používáním hnojiv.",https://en.wikipedia.org/wiki/Special:Redirect/file/Pasta.jpg
+Potato,Brambory,🥔,starchy,"Generally low-impact and land-efficient; storage, refrigeration, fertilizer use and food waste can influence its footprint.","Brambory jsou ekologicky relativně nenáročná a výnosná plodina. Dopad může zvyšovat používání hnojiv, skladování a chlazení.",https://en.wikipedia.org/wiki/Special:Redirect/file/Potato.jpg
+Sweet potato,Batáty,🍠,starchy,"Generally low-impact crop with relatively efficient land use; impacts vary with fertilizer, irrigation, storage and transport.","Batáty mají obecně nízkou ekologickou stopu. Dopad se liší podle spotřeby vody, hnojiv, skladování a dopravy.",https://en.wikipedia.org/wiki/Special:Redirect/file/Sweet%20potato.jpg
+Cassava,Maniok,🫚,starchy,"Generally low-impact and highly productive per unit of land; processing can require energy and water, while local production often reduces transport impacts.",Maniok má vysoký výnos na jednotku půdy a obecně nízkou ekologickou stopu. Zpracování může vyžadovat energii a vodu.,https://en.wikipedia.org/wiki/Special:Redirect/file/Cassava.jpg
+Beans,Fazole,🫘,plant,"Very climate-efficient protein source compared with meat; legumes can fix atmospheric nitrogen, reducing fertilizer needs, although processing and irrigation vary by type.","Fazole jsou velmi efektivním zdrojem rostlinných bílkovin. Luštěniny navíc vážou dusík ze vzduchu, takže mohou snižovat potřebu dusíkatých hnojiv.",https://en.wikipedia.org/wiki/Special:Redirect/file/Common%20bean.jpg
+Peanuts,Arašídy,🥜,plant,"Generally low-impact source of protein and unsaturated fat; land and water requirements are usually much lower than those of animal protein, though farming practices vary.",Arašídy jsou relativně ekologicky šetrným zdrojem bílkovin a nenasycených tuků. Obvykle vyžadují méně půdy než živočišné zdroje bílkovin.,https://en.wikipedia.org/wiki/Special:Redirect/file/Peanut.jpg
+Walnuts,Vlašské ořechy,🌰,plant,Generally lower-impact than animal protein and rich in unsaturated fats; orchards can require substantial water in dry regions and may have long production cycles.,Vlašské ořechy mají obvykle nižší dopad než živočišné zdroje bílkovin. V suchých oblastech však mohou mít vysokou spotřebu vody.,https://en.wikipedia.org/wiki/Special:Redirect/file/Walnut.jpg
+Edamame,Edamame,🫛,plant,"Soy-based food with generally low environmental impact and efficient protein production; impacts depend on farming, processing and transport.","Edamame je sójový produkt s obecně nízkou ekologickou stopou a efektivní produkcí bílkovin. Záleží však na způsobu pěstování, zpracování a dopravě.",https://en.wikipedia.org/wiki/Special:Redirect/file/Edamame.jpg
+Olive oil,Olivový olej,🫒,oils,"Usually lower-impact than animal fats, but olive cultivation can require substantial water in dry regions; production also benefits from perennial tree crops.",Olivový olej má obvykle nižší dopad než živočišné tuky. V suchých oblastech však může být významná spotřeba vody.,https://en.wikipedia.org/wiki/Special:Redirect/file/Olive%20oil.jpg
+Sunflower oil,Slunečnicový olej,🌻,oils,"Generally lower-impact than animal fats; cultivation can require fertilizer and pesticides, and environmental performance varies with farming practices.",Slunečnicový olej má obecně nižší ekologickou stopu než živočišné tuky. Dopady souvisejí zejména s pěstováním a používáním hnojiv a pesticidů.,https://en.wikipedia.org/wiki/Special:Redirect/file/Sunflower%20oil.jpg
+Rapeseed oil,Řepkový olej,🌼,oils,"Generally relatively low-impact plant oil; efficient oilseed production can have a lower footprint than animal fats, though fertilizer use is important.","Řepkový olej má relativně nízkou ekologickou stopu. Efektivní produkce olejnin může mít menší dopad než živočišné tuky, důležité je však používání hnojiv.",https://en.wikipedia.org/wiki/Special:Redirect/file/Rapeseed.jpg
+Candy,Bonbony,🍬,sugarsalt,"Low nutritional value and usually made from refined sugar and other processed ingredients; environmental impacts come mainly from sugar crops, processing and packaging.","Bonbony mají nízkou nutriční hodnotu a obsahují hlavně cukr a další zpracované suroviny. Ekologický dopad souvisí především s produkcí cukru, zpracováním a obaly.",https://en.wikipedia.org/wiki/Special:Redirect/file/Candy.jpg
+Donut,Kobliha,🍩,sugarsalt,Highly processed food with added sugar and often dairy/egg/fat; generally less environmentally favorable than minimally processed plant foods.,"Koblihy jsou vysoce zpracované potraviny často obsahující cukr, tuky, vejce a mléčné složky. Ve srovnání s minimálně zpracovanými rostlinnými potravinami jsou méně ekologicky příznivé.",https://en.wikipedia.org/wiki/Special:Redirect/file/Doughnut.jpg
+Salt,Sůl,🧂,sugarsalt,Environmental impact per serving is generally small because very little is consumed by weight; extraction and processing still require energy and infrastructure.,"Spotřebované množství soli je malé, takže její ekologický dopad na jednu porci bývá nízký. Těžba a zpracování však vyžadují energii a infrastrukturu.",https://en.wikipedia.org/wiki/Special:Redirect/file/Salt.jpg
+Soda,Slazená limonáda,🥤,sugarsalt,"High in added sugar and typically packaged in bottles or cans; environmental impacts include sugar production, packaging and beverage manufacturing, while its nutritional value is low.","Slazené limonády mají nízkou nutriční hodnotu a často vyžadují obaly, jejichž výroba a likvidace mají významný ekologický dopad.",https://en.wikipedia.org/wiki/Special:Redirect/file/Soft%20drink.jpg
+Cookies,Sušenky,🍪,sugarsalt,"Highly processed and often contain sugar, refined flour, butter or palm/other oils; impacts vary with ingredients, but they are generally less favorable than whole plant foods.","Sušenky jsou vysoce zpracované a často obsahují cukr, rafinovanou mouku, máslo nebo oleje. Jejich dopad se liší podle složení, ale obecně jsou méně výhodné než celozrnné rostlinné potraviny.",https://en.wikipedia.org/wiki/Special:Redirect/file/Cookie.jpg
+Fish,Ryby,🐟,animal,"Environmental impact varies enormously by species and fishing/farming method; small pelagic fish and well-managed fisheries can be relatively efficient, while some fisheries have high fuel use or ecological impacts.","Ekologický dopad ryb se velmi liší podle druhu a způsobu lovu či chovu. Některé druhy mohou být relativně efektivním zdrojem bílkovin, zatímco intenzivní rybolov může mít vysoké dopady na ekosystémy.",https://en.wikipedia.org/wiki/Special:Redirect/file/Fish.jpg
+Chicken,Kuřecí maso,🍗,animal,"Usually lower-impact than beef and lamb but still requires feed, land and energy; poultry production also creates manure and other environmental pressures.","Kuřecí maso má obvykle nižší ekologickou stopu než hovězí, ale stále vyžaduje krmivo, půdu a energii a vytváří další environmentální zátěž spojenou s chovem.",https://en.wikipedia.org/wiki/Special:Redirect/file/Chicken%20as%20food.jpg
+Beef,Hovězí maso,🥩,animal,Typically among the highest-impact common foods because cattle emit methane and require substantial land and feed; reducing beef consumption usually offers large environmental benefits.,"Hovězí maso patří mezi potraviny s nejvyšší ekologickou stopou. Skot produkuje metan a vyžaduje značné množství půdy a krmiva, takže omezení spotřeby hovězího může mít velký přínos.",https://en.wikipedia.org/wiki/Special:Redirect/file/Beef.jpg
+Eggs,Vejce,🥚,animal,"Moderate environmental impact relative to beef and dairy, but higher than most plant protein sources; feed production is a major part of the footprint.","Vejce mají nižší ekologickou stopu než hovězí maso a většina mléčných výrobků, ale vyšší než většina rostlinných zdrojů bílkovin. Významnou část dopadu tvoří produkce krmiva.",https://en.wikipedia.org/wiki/Special:Redirect/file/Egg%20as%20food.jpg
+Shrimp,Krevety,🦐,animal,"Highly variable impact: some farmed shrimp can cause substantial emissions and habitat loss, while other systems are better managed; wild trawling can have high fuel use and seabed impacts.","Ekologický dopad krevet se výrazně liší podle způsobu produkce. Některé chovy mohou být spojeny s ničením stanovišť a vysokými emisemi, zatímco vlečné sítě mohou mít vysokou spotřebu paliva a dopad na mořské dno.",https://en.wikipedia.org/wiki/Special:Redirect/file/Shrimp.jpg
+Milk,Mléko,🥛,dairy,Higher environmental impact than most plant-based drinks because dairy cattle require feed and produce methane; impacts vary by farming system and production efficiency.,"Mléko má vyšší ekologickou stopu než většina rostlinných nápojů, protože chov skotu vyžaduje krmivo a produkuje metan. Dopad se liší podle způsobu chovu.",https://en.wikipedia.org/wiki/Special:Redirect/file/Milk.jpg
+Cheese,Sýr,🧀,dairy,"Generally high-impact among foods because large quantities of milk are needed to make cheese; methane, feed production and processing contribute substantially.","Sýr patří mezi potraviny s relativně vysokou ekologickou stopou, protože k jeho výrobě je potřeba velké množství mléka. Významné jsou emise metanu, produkce krmiva a zpracování.",https://en.wikipedia.org/wiki/Special:Redirect/file/Cheese.jpg
+Butter,Máslo,🧈,dairy,Usually very high-impact per kilogram because it is concentrated from milk fat and therefore requires substantial dairy production; generally much higher-impact than plant oils.,"Máslo má obvykle velmi vysokou ekologickou stopu, protože se vyrábí z mléčného tuku a vyžaduje proto značné množství mléčné produkce. Rostlinné oleje mají obvykle nižší dopad.",https://en.wikipedia.org/wiki/Special:Redirect/file/Butter.jpg
+`;
 
-    /* =====================================================================
-       6. GAME CODE  (no need to edit below to change sizes or fonts)
-       ===================================================================== */
+    // which CSV columns belong to which language (to add a language, add its columns here)
+    const CSV_COLUMNS = {
+      en: { name: "name", info: "additional_info" },
+      cs: { name: "czech_name", info: "czech_additional_info" },
+    };
+
     /* =====================================================================
        5b. LANGUAGES
        - UI texts: edit the `UI` object (one entry per language).
-       - Category names, hints and food names are written in English above;
-         their other-language versions are looked up in `TRANSLATIONS`
-         (English text -> translated text). A missing entry falls back to English.
-       - To add a language: add it to UI, TRANSLATIONS and a button in the header.
+       - Category names and hints are written in English above; their
+         other-language versions are looked up in `TRANSLATIONS`.
+         A missing entry falls back to English.
+       - Food names and info come from the CSV (see CSV_COLUMNS).
+       - To add a language: add it to UI, TRANSLATIONS, CSV_COLUMNS and a button in the header.
        ===================================================================== */
     const UI = {
       en: {
         pageTitle: "Planetary Plate – sort the foods",
         title: "Planetary Health Diet",
-        subtitle: "Different foods. <b>Different colors.</b> Drag each food onto its place on the plate.",
+        subtitle: "Different foods. <b>Different colors.</b> Drag each food onto its place on the plate.<br>By <b>double-clicking</b> on food groups or food items you can show more information",
         sorted: "Sorted",
         mistakes: "Mistakes",
         restart: "Start over",
@@ -504,7 +569,7 @@
       cs: {
         pageTitle: "Planetární talíř – roztřiď potraviny",
         title: "Planetární zdravá strava",
-        subtitle: "Různé potraviny. <b>Různé barvy.</b> Přetáhni každou potravinu na její místo na talíři.",
+        subtitle: "Různé potraviny. <b>Různé barvy.</b> Přetáhni každou potravinu na její místo na talíři.<br><b>Dvojklikem</b> na skupiny potravin nebo jednotlivé potraviny můžete zobrazit více informací.",
         sorted: "Roztříděno",
         mistakes: "Chyby",
         restart: "Začít znovu",
@@ -534,17 +599,6 @@
         "Fish, chicken, red meat, eggs": "Ryby, drůbež, červené maso, vejce",
         "Legumes, soy, tree nuts": "Luštěniny, sója, ořechy",
         "Eat every day": "Jíst každý den",
-        // foods
-        "Broccoli": "Brokolice", "Carrot": "Mrkev", "Apple": "Jablko", "Strawberries": "Jahody",
-        "Tomato": "Rajče", "Eggplant": "Lilek", "Orange": "Pomeranč", "Leafy greens": "Listová zelenina",
-        "Whole-wheat bread": "Celozrnný chléb", "Brown rice": "Hnědá rýže", "Corn": "Kukuřice",
-        "Oatmeal": "Ovesná kaše", "Whole-grain pasta": "Celozrnné těstoviny",
-        "Potato": "Brambora", "Sweet potato": "Batát", "Cassava": "Maniok",
-        "Beans": "Fazole", "Peanuts": "Arašídy", "Walnuts": "Vlašské ořechy", "Edamame": "Edamame",
-        "Olive oil": "Olivový olej", "Sunflower oil": "Slunečnicový olej", "Rapeseed oil": "Řepkový olej",
-        "Candy": "Bonbony", "Donut": "Donut", "Salt": "Sůl", "Soda": "Limonáda", "Cookies": "Sušenky",
-        "Fish": "Ryba", "Chicken": "Kuřecí maso", "Beef": "Hovězí maso", "Eggs": "Vejce", "Shrimp": "Krevety",
-        "Milk": "Mléko", "Cheese": "Sýr", "Butter": "Máslo",
       },
     };
 
@@ -552,8 +606,12 @@
       ? ((navigator.language || "").toLowerCase().startsWith("cs") ? "cs" : "en")
       : CONFIG.defaultLanguage;
 
-    const ui = () => UI[currentLang];                                        // UI texts in the current language
-    const tr = (text) => TRANSLATIONS[currentLang]?.[text] ?? text;          // translate a category/hint/food name
+    const ui = () => UI[currentLang];                                  // UI texts in the current language
+    const tr = (text) => TRANSLATIONS[currentLang]?.[text] ?? text;    // translate a category name / hint
+
+    // Food name and info in the current language (from the CSV row)
+    const foodName = (food) => food.row[CSV_COLUMNS[currentLang]?.name] || food.name;
+    const foodInfo = (food) => food.row[CSV_COLUMNS[currentLang]?.info] || food.row[CSV_COLUMNS.en.info] || "";
 
     // Put the current language into all fixed texts of the page
     function applyStaticText() {
@@ -578,6 +636,26 @@
       say(ui().intro);
     }
 
+    /* =====================================================================
+       5c. GROUP POPUP CONTENT  (double-click a section of the plate)
+       One HTML template per group and language (fill these in).
+       Placeholders: {label} {hint} {id}. Style it with CSS inside #popupBody.
+       A missing language falls back to English; a missing group shows just its label and hint.
+       ===================================================================== */
+    const GROUP_INFO = {
+      grains: { en: `<h2>{label}</h2><p>HTML for Whole Grains (English)</p>`, cs: `<h2>{label}</h2><p>HTML pro celozrnné obiloviny (česky)</p>` },
+      starchy: { en: `<h2>{label}</h2><p>HTML for Starchy Vegetables (English)</p>`, cs: `<h2>{label}</h2><p>HTML pro škrobovou zeleninu (česky)</p>` },
+      oils: { en: `<h2>{label}</h2><p>HTML for Unsaturated Plant Oils (English)</p>`, cs: `<h2>{label}</h2><p>HTML pro rostlinné oleje (česky)</p>` },
+      sugarsalt: { en: `<h2>{label}</h2><p>HTML for Added Sugars & Salt (English)</p>`, cs: `<h2>{label}</h2><p>HTML pro cukr a sůl (česky)</p>` },
+      animal: { en: `<h2>{label}</h2><p>HTML for Animal Protein (English)</p>`, cs: `<h2>{label}</h2><p>HTML pro Živočišné bílkoviny (česky)</p>` },
+      dairy: { en: `<h2>{label}</h2><p>HTML for Dairy Foods (English)</p>`, cs: `<h2>{label}</h2><p>HTML pro mléčné výrobky (česky)</p>` },
+      plant: { en: `<h2>{label}</h2><p>HTML for Plant Protein (English)</p>`, cs: `<h2>{label}</h2><p>HTML pro rostlinné bílkoviny (česky)</p>` },
+      veg: { en: `<h2>{label}</h2><p>HTML for Vegetables & Fruits (English)</p>`, cs: `<h2>{label}</h2><p>HTML pro zeleninu a ovoce (česky)</p>` },
+    };
+
+    /* =====================================================================
+       6. GAME CODE  (no need to edit below to change sizes or fonts)
+       ===================================================================== */
     const SVG_NS = "http://www.w3.org/2000/svg";
     const $ = (id) => document.getElementById(id);
 
@@ -585,16 +663,52 @@
     const CX = CONFIG.marginX + R;
     const CY = CONFIG.marginY + R;
 
+    let FOODS = [];           // filled from the CSV by loadFoods()
     let pool = [];            // foods still waiting on the right
     let placed = {};          // categoryId -> foods already on the plate
     let selectedId = null;    // food picked by tap/click
     let mistakes = 0;
+    let clickTimer = null;
+
+    /* ---------- CSV ---------- */
+    // minimal CSV parser: handles "quoted, values", doubled quotes and line breaks
+    function parseCsv(text) {
+      const rows = [];
+      let row = [], cell = "", quoted = false;
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        if (quoted) {
+          if (ch === '"' && text[i + 1] === '"') { cell += '"'; i++; }
+          else if (ch === '"') quoted = false;
+          else cell += ch;
+        } else if (ch === '"') quoted = true;
+        else if (ch === ",") { row.push(cell); cell = ""; }
+        else if (ch === "\n" || ch === "\r") {
+          if (ch === "\r" && text[i + 1] === "\n") i++;
+          row.push(cell); rows.push(row); row = []; cell = "";
+        } else cell += ch;
+      }
+      if (cell || row.length) { row.push(cell); rows.push(row); }
+      const [header, ...body] = rows.filter((r) => r.some((c) => c.trim()));
+      return body.map((r) => Object.fromEntries(header.map((h, i) => [h.trim(), (r[i] || "").trim()])));
+    }
+
+    // CSV text -> FOODS (each food keeps its whole CSV row in `row`)
+    function loadFoods(csvText) {
+      FOODS = parseCsv(csvText.replace(/^\uFEFF/, "")).map((row, i) => ({
+        id: "food" + i, name: row.name, emoji: row.emoji, category: row.category,
+        image: row.wikipedia_image_url, row,
+      }));
+      FOODS.forEach((f) => {
+        if (!CATEGORIES.some((c) => c.id === f.category)) console.warn(`Unknown category "${f.category}" for ${f.name}`);
+      });
+    }
 
     /* ---------- geometry helpers ---------- */
     // angle 0 = top, increasing clockwise
     function polar(radius, deg) {
       const rad = (deg - 90) * Math.PI / 180;
-      return {x: CX + radius * Math.cos(rad), y: CY + radius * Math.sin(rad)};
+      return { x: CX + radius * Math.cos(rad), y: CY + radius * Math.sin(rad) };
     }
     function wedgePath(startDeg, endDeg) {
       const a = polar(R, startDeg), b = polar(R, endDeg);
@@ -610,8 +724,6 @@
 
     /* ---------- compute section angles ---------- */
     const totalDegrees = CATEGORIES.reduce((sum, c) => sum + c.degrees, 0);
-
-
     let cursor = CONFIG.startAngle;
     CATEGORIES.forEach((c) => {
       c.start = cursor;
@@ -626,7 +738,7 @@
 
     function buildWheel() {
       svg.innerHTML = "";
-      svgEl("circle", {cx: CX, cy: CY, r: R + CONFIG.plateRim, fill: "var(--plate)"}, svg);
+      svgEl("circle", { cx: CX, cy: CY, r: R + CONFIG.plateRim, fill: "var(--plate)" }, svg);
 
       CATEGORIES.forEach((c) => {
         const path = svgEl("path", {
@@ -634,13 +746,17 @@
           stroke: "var(--plate)", "stroke-width": CONFIG.dividerWidth, "stroke-linejoin": "round",
         }, svg);
         c.el = path;
-        path.addEventListener("dragover", (e) => {e.preventDefault(); path.classList.add("hover");});
+        path.addEventListener("dragover", (e) => { e.preventDefault(); path.classList.add("hover"); });
         path.addEventListener("dragleave", () => path.classList.remove("hover"));
         path.addEventListener("drop", (e) => {
           e.preventDefault(); path.classList.remove("hover");
           tryPlace(e.dataTransfer.getData("text/plain"), c);
         });
-        path.addEventListener("click", () => {if (selectedId) tryPlace(selectedId, c);});
+        path.addEventListener("click", () => {   // wait briefly, so a double-click doesn't also place a food
+          clearTimeout(clickTimer);
+          clickTimer = setTimeout(() => { if (selectedId) tryPlace(selectedId, c); }, CONFIG.doubleClickDelay);
+        });
+        path.addEventListener("dblclick", () => { clearTimeout(clickTimer); openGroupPopup(c); });
       });
 
       CATEGORIES.forEach(drawLabel);
@@ -649,24 +765,12 @@
 
     function drawLabel(c) {
 
-      let origialPlateRim;
-      let originalLebelDistance;
-
-      if(c.id == "oils"){
+      if (c.id == "oils") {
         CONFIG.labelDistance = CONFIG.labelDistance + 20
       }
 
-
-      const edge = polar(R + CONFIG.plateRim, c.mid); // where the line starts (plate edge)
+      const edge = polar(R + CONFIG.plateRim, c.mid);                       // where the line starts (plate edge)
       const end = polar(R + CONFIG.plateRim + CONFIG.labelDistance, c.mid); // where the line ends (label)
-
-
-
-      
-
-      
-                  
-      
       const side = Math.sin(c.mid * Math.PI / 180);   // > 0 right side, < 0 left side
       const vert = Math.cos(c.mid * Math.PI / 180);   // > 0 top, < 0 bottom
       const anchor = side > 0.3 ? "start" : side < -0.3 ? "end" : "middle";
@@ -682,19 +786,19 @@
       const pad = CONFIG.showLeaderLines ? CONFIG.labelPadding : 0;
       const W = CONFIG.labelWidth, H = CONFIG.labelHeight;
       let x, y, align, justify, textAlign;   // box position + how the content sits inside it
-      if (anchor === "start") {x = end.x + pad; y = end.y - H / 2; align = "flex-start"; justify = "center"; textAlign = "left";}
-      else if (anchor === "end") {x = end.x - pad - W; y = end.y - H / 2; align = "flex-end"; justify = "center"; textAlign = "right";}
-      else if (vert < 0) {x = end.x - W / 2; y = end.y + pad; align = "center"; justify = "flex-start"; textAlign = "center";} // below the plate
-      else {x = end.x - W / 2; y = end.y - pad - H; align = "center"; justify = "flex-end"; textAlign = "center";} // above the plate
+      if (anchor === "start") { x = end.x + pad; y = end.y - H / 2; align = "flex-start"; justify = "center"; textAlign = "left"; }
+      else if (anchor === "end") { x = end.x - pad - W; y = end.y - H / 2; align = "flex-end"; justify = "center"; textAlign = "right"; }
+      else if (vert < 0) { x = end.x - W / 2; y = end.y + pad; align = "center"; justify = "flex-start"; textAlign = "center"; } // below the plate
+      else { x = end.x - W / 2; y = end.y - pad - H; align = "center"; justify = "flex-end"; textAlign = "center"; } // above the plate
 
-      const data = {id: c.id, label: tr(c.label), hint: CONFIG.showHints ? tr(c.hint || "") : ""};
+      const data = { id: c.id, label: tr(c.label), hint: CONFIG.showHints ? tr(c.hint || "") : "" };
       const template = c.template || CONFIG.labelTemplate;
       const html = template.replace(/\{(\w+)\}/g, (_, key) => data[key] ?? "");
 
-      const box = svgEl("foreignObject", {x, y, width: W, height: H, class: "label-object"}, svg);
+      const box = svgEl("foreignObject", { x, y, width: W, height: H, class: "label-object" }, svg);
       box.innerHTML = `<div class="label-wrap" style="align-items:${align}; justify-content:${justify}; text-align:${textAlign}">${html}</div>`;
 
-      if(c.id == "oils"){
+      if (c.id == "oils") {
         CONFIG.labelDistance = CONFIG.labelDistance - 20
       }
 
@@ -708,9 +812,9 @@
         const radius = R * Math.max(0.2, CONFIG.placedStartRadius - CONFIG.placedRowStep * row);
         const offset = columns === 2 ? (col ? 1 : -1) * span * 0.22 : 0;
         const p = polar(radius, c.mid + offset);
-        const t = svgEl("text", {x: p.x, y: p.y, "text-anchor": "middle", "dominant-baseline": "central", class: "placed"}, svg);
+        const t = svgEl("text", { x: p.x, y: p.y, "text-anchor": "middle", "dominant-baseline": "central", class: "placed" }, svg);
         t.textContent = food.emoji;
-        const title = svgEl("title", {}, t); title.textContent = tr(food.name);
+        const title = svgEl("title", {}, t); title.textContent = foodName(food);
       });
     }
 
@@ -723,10 +827,10 @@
         card.className = "card" + (food.id === selectedId ? " selected" : "");
         card.draggable = true;
         card.dataset.id = food.id;
-        card.innerHTML = (food.image ? `<img src="${food.image}" alt="">` : `<span class="icon">${food.emoji}</span>`) +
-          `<span class="name">${tr(food.name)}</span>`;
-        card.addEventListener("dragstart", (e) => {e.dataTransfer.setData("text/plain", food.id); select(food.id);});
+        card.innerHTML = `<span class="icon">${food.emoji}</span><span class="name">${esc(foodName(food))}</span>`;
+        card.addEventListener("dragstart", (e) => { e.dataTransfer.setData("text/plain", food.id); select(food.id); });
         card.addEventListener("click", () => select(food.id === selectedId ? null : food.id));
+        card.addEventListener("dblclick", () => openFoodPopup(food));
         el.appendChild(card);
       });
       $("placedCount").textContent = FOODS.length - pool.length;
@@ -739,9 +843,9 @@
       document.querySelectorAll(".card").forEach((c) => c.classList.toggle("selected", c.dataset.id === id));
     }
 
-    function say(text, kind = "") {const m = $("message"); m.textContent = text; m.className = kind;}
+    function say(text, kind = "") { const m = $("message"); m.textContent = text; m.className = kind; }
 
-    function flash(el, cls) {el.classList.remove(cls); void el.getBBox(); el.classList.add(cls);}
+    function flash(el, cls) { el.classList.remove(cls); void el.getBBox(); el.classList.add(cls); }
 
     /* ---------- placing a food ---------- */
     function tryPlace(foodId, category) {
@@ -754,16 +858,52 @@
         selectedId = null;
         flash(category.el, "flash-good");
         buildWheel(); renderPool();
-        say(pool.length ? ui().correct(tr(food.name), tr(category.label)) : ui().won(mistakes), "good");
+        say(pool.length ? ui().correct(foodName(food), tr(category.label)) : ui().won(mistakes), "good");
       } else {
         mistakes++;
         flash(category.el, "flash-bad");
         const card = document.querySelector(`.card[data-id="${foodId}"]`);
-        if (card) {card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake");}
+        if (card) { card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake"); }
         $("mistakes").textContent = mistakes;
-        say(ui().wrong(tr(food.name), tr(category.label)), "bad");
+        say(ui().wrong(foodName(food), tr(category.label)), "bad");
       }
     }
+
+    /* ---------- info popups ---------- */
+    const esc = (s) => s.replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+    const fill = (template, data) => template.replace(/\{(\w+)\}/g, (_, key) => data[key] ?? "");
+
+    function openPopup(html) { $("popupBody").innerHTML = html; $("popup").showModal(); }
+
+    // Wikipedia "Special:Redirect/file" links accept ?width= to return a smaller picture
+    function photoUrl(url) {
+      return url + (url.includes("?") ? "&" : "?") + "width=" + CONFIG.popupImageWidth;
+    }
+
+    function openFoodPopup(food) {
+      const info = foodInfo(food);
+      const picture = food.image
+        ? `<img class="popup-photo" src="${esc(photoUrl(food.image))}" alt="${esc(foodName(food))}" referrerpolicy="no-referrer">`
+        : `<div class="popup-icon">${food.emoji}</div>`;
+      openPopup(`<div class="popup-food">${picture}<h2>${esc(foodName(food))}</h2>${info ? `<p>${esc(info)}</p>` : ""}</div>`);
+
+      // if the photo can't be loaded, show the emoji instead
+      const img = $("popupBody").querySelector(".popup-photo");
+      if (img) img.addEventListener("error", () => {
+        img.outerHTML = `<div class="popup-icon">${food.emoji}</div>`;
+      });
+    }
+
+    function openGroupPopup(c) {
+      const entry = GROUP_INFO[c.id] || {};
+      const template = entry[currentLang] || entry.en || "<h2>{label}</h2><p>{hint}</p>";
+      openPopup(fill(template, { id: c.id, label: tr(c.label), hint: tr(c.hint || "") }));
+    }
+
+    // close with the X button or by clicking the dark background (Esc works automatically)
+    $("popup").addEventListener("click", (e) => {
+      if (e.target === e.currentTarget || e.target.closest(".popup-close")) e.currentTarget.close();
+    });
 
     /* ---------- start / restart ---------- */
     function newGame() {
@@ -772,11 +912,27 @@
       say(ui().intro);
       buildWheel(); renderPool();
     }
+
+    async function start() {
+      let csvText = FOODS_CSV;
+      if (CONFIG.csvUrl) {
+        try {
+          const response = await fetch(CONFIG.csvUrl);
+          if (!response.ok) throw new Error(response.status);
+          csvText = await response.text();
+        } catch (err) {
+          console.warn(`Could not load ${CONFIG.csvUrl}, using the embedded CSV instead.`, err);
+        }
+      }
+      loadFoods(csvText);
+      applyStaticText();
+      newGame();
+    }
+
     $("restart").addEventListener("click", newGame);
     document.querySelectorAll(".lang button").forEach((b) =>
       b.addEventListener("click", () => setLanguage(b.dataset.lang)));
-    applyStaticText();
-    newGame();
+    start();
   </script>
 </body>
 

@@ -1,0 +1,34 @@
+{
+  "grains": {
+    "en": "<h2>{label}</h2><p>HTML for Whole Grains (English)</p>",
+    "cs": "<h2>{label}</h2><p>HTML pro celozrnné obiloviny (česky)</p>"
+  },
+  "starchy": {
+    "en": "<h2>{label}</h2><p>HTML for Starchy Vegetables (English)</p>",
+    "cs": "<h2>{label}</h2><p>HTML pro škrobovou zeleninu (česky)</p>"
+  },
+  "oils": {
+    "en": "<h2>{label}</h2><p>HTML for Unsaturated Plant Oils (English)</p>",
+    "cs": "<h2>{label}</h2><p>HTML pro rostlinné oleje (česky)</p>"
+  },
+  "sugarsalt": {
+    "en": "<h2>{label}</h2><p>HTML for Added Sugars & Salt (English)</p>",
+    "cs": "<h2>{label}</h2><p>HTML pro cukr a sůl (česky)</p>"
+  },
+  "animal": {
+    "en": "<h2>{label}</h2><p>HTML for Animal Protein (English)</p>",
+    "cs": "<h2>{label}</h2><p>HTML pro Živočišné bílkoviny (česky)</p>"
+  },
+  "dairy": {
+    "en": "<h2>{label}</h2><p>HTML for Dairy Foods (English)</p>",
+    "cs": "<h2>{label}</h2><p>HTML pro mléčné výrobky (česky)</p>"
+  },
+  "plant": {
+    "en": "<h2>{label}</h2><p>HTML for Plant Protein (English)</p>",
+    "cs": "<h2>{label}</h2><p>HTML pro rostlinné bílkoviny (česky)</p>"
+  },
+  "veg": {
+    "en": "<h2>{label}</h2><p>HTML for Vegetables & Fruits (English)</p>",
+    "cs": "<h2>{label}</h2><p>HTML pro zeleninu a ovoce (česky)</p>"
+  }
+}
