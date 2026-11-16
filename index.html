@@ -60,6 +60,133 @@
       /* height of the Wikipedia photo */
     }
 
+    /* ---- tutorial popup (info button) ---- */
+    :root {
+      --tutorial-width: 900px;
+      /* popup width */
+      --tutorial-green: #1f4d3a;
+      /* header + step circles */
+      --tutorial-note-bg: #e6f0e7;
+      /* side boxes */
+      --font-tutorial-title: 32px;
+      --font-tutorial-text: 16px;
+      --font-tutorial-note: 13px;
+    }
+
+    /* a wider, white popup, only when it contains the tutorial */
+    dialog#popup:has(.tutorial) {
+      width: min(var(--tutorial-width), calc(100vw - 32px));
+      background: #fff;
+      overflow: auto;
+    }
+
+    dialog#popup:has(.tutorial) #popupBody {
+      padding: 0;
+    }
+
+    dialog#popup:has(.tutorial) .popup-close {
+      color: #fff;
+    }
+
+    #popupBody .tutorial {
+      color: #1b2a22;
+      font-size: var(--font-tutorial-text);
+    }
+
+    .t-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 16px;
+      padding: 18px 56px 16px 24px;
+      background: var(--tutorial-green);
+      color: #fff;
+    }
+
+    .t-header small {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    #popupBody .tutorial h2 {
+      margin: 2px 0 0;
+      font-family: "Inter", sans-serif;
+      font-size: var(--font-tutorial-title);
+      font-weight: 800;
+      text-transform: none;
+      color: #fff;
+    }
+
+    .t-time {
+      font-weight: 700;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .t-body {
+      display: grid;
+      grid-template-columns: 1fr 260px;
+      gap: 28px;
+      padding: 22px 24px 28px;
+    }
+
+    @media (max-width: 700px) {
+      .t-body {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    #popupBody .t-goal {
+      margin: 0 0 20px;
+      color: #1b2a22;
+    }
+
+    #popupBody .t-steps {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      color: inherit;
+    }
+
+    .t-step {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .t-num {
+      flex: 0 0 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--tutorial-green);
+      color: #fff;
+      font-weight: 700;
+      display: grid;
+      place-items: center;
+    }
+
+    .t-note {
+      background: var(--tutorial-note-bg);
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin-bottom: 12px;
+      font-size: var(--font-tutorial-note);
+      line-height: 1.45;
+    }
+
+    .t-note.dashed {
+      background: transparent;
+      border: 1.5px dashed #5aa35f;
+    }
+
+    .t-star {
+      color: #e8a317;
+    }
+
     /* =====================================================================
        2. PAGE LAYOUT
        ===================================================================== */
@@ -94,6 +221,40 @@
     .subtitle b {
       color: var(--accent);
       font-weight: 700;
+    }
+
+    /* ---- info button (top left) ---- */
+    .info-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid var(--muted);
+      background: transparent;
+      color: var(--ink);
+      font: 700 20px "Archivo Black", Impact, sans-serif;
+      cursor: pointer;
+    }
+
+    .info-btn:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #1b2a22;
+    }
+
+    .info-btn:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* lists inside any popup (tutorial, group info) */
+    #popupBody ul,
+    #popupBody ol {
+      margin: 8px 0;
+      padding-left: 1.3em;
+      color: var(--muted);
     }
 
     main {
@@ -402,6 +563,7 @@
 <body>
 
   <header>
+    <button class="info-btn" id="infoBtn" aria-label="Info / Nápověda">i</button>
     <div class="lang" role="group" aria-label="Language">
       <button data-lang="en">EN</button>
       <button data-lang="cs">CZ</button>
@@ -580,6 +742,59 @@ Butter,Máslo,🧈,dairy,Usually very high-impact per kilogram because it is con
         won: (n) => `Hotovo! Počet chyb: ${n}. Skvělá práce!`,
       },
     };
+
+    const TUTORIAL_INFO = {
+      cs: {
+        station: "Stanoviště 1",
+        title: "Rozlušti talíř",
+        time: "XX minut",
+        goalLabel: "Cíl:",
+        goal: "Zjistěte, jak má vypadat talíř na celý den, který zároveň nutričně vyvážený a šetrný k naší planetě!",
+        steps: [
+          "Dvojklikem na části talíře zjistětě více informací o dané kategorii - kolik procent z denního jídla představuje přesně, k čemu tato kategorie slouží a jaký má dopad na životní prostředí ",
+          "Poté postupně přesuňte všech XX karet potravin do správných kategorií",
+          "Pokud si nejste jisti dvojklikem na kartu potraviny si zjistíte více informací",
+        ],
+        notes: [
+          { html: "Třída A–E na kartičce = uhlíková stopa jedné běžné porce (A nejmenší, D největší)." }
+        ],
+      },
+      en: {
+        station: "Station 1",
+        title: "Untangle the plate",
+        time: "XX minutes",
+        goalLabel: "Goal:",
+        goal: "Find out what a plate for the whole day should look like—one that is both nutritionally balanced and kind to our planet!",
+        steps: [
+          "Double-click on sections of the plate to find out more about a given category—exactly what percentage of your daily food intake it represents, what purpose it serves, and its environmental impact.",
+          "Sort the 30 food cards into the sections and into the fields Drinks, Oils and fats, and Off the plate.",
+          "If you are unsure, you can find more information by double-clicking on the food item card.",
+        ],
+        notes: [
+          { html: "Class A–E on a card = the carbon footprint of one ordinary portion (A smallest, D largest)." },
+        ],
+      },
+    };
+
+    // builds the tutorial HTML from the text fields above
+    function renderTutorial(t) {
+      const steps = t.steps.map((s, i) => `<li class="t-step"><span class="t-num">${i + 1}</span><span>${s}</span></li>`).join("");
+      const notes = t.notes.map((n) => `<div class="t-note ${n.style || ""}">${n.html}</div>`).join("");
+      return `
+    <div class="tutorial">
+      <div class="t-header">
+        <div><small>${t.station}</small><h2>${t.title}</h2></div>
+        <span class="t-time">${t.time}</span>
+      </div>
+      <div class="t-body">
+        <div class="t-main">
+          <p class="t-goal"><b>${t.goalLabel}</b> ${t.goal}</p>
+          <ol class="t-steps">${steps}</ol>
+        </div>
+        <div class="t-side">${notes}</div>
+      </div>
+    </div>`;
+    }
 
     const TRANSLATIONS = {
       cs: {
@@ -905,6 +1120,10 @@ Butter,Máslo,🧈,dairy,Usually very high-impact per kilogram because it is con
       if (e.target === e.currentTarget || e.target.closest(".popup-close")) e.currentTarget.close();
     });
 
+    $("infoBtn").addEventListener("click", () => {
+      openPopup(renderTutorial(TUTORIAL_INFO[currentLang] || TUTORIAL_INFO.en));
+    });
+
     /* ---------- start / restart ---------- */
     function newGame() {
       pool = [...FOODS].sort(() => Math.random() - 0.5);
@@ -926,7 +1145,7 @@ Butter,Máslo,🧈,dairy,Usually very high-impact per kilogram because it is con
       }
       loadFoods(csvText);
       applyStaticText();
-      newGame();
+      newGame(); $
     }
 
     $("restart").addEventListener("click", newGame);
