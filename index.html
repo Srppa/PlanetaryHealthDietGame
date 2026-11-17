@@ -667,6 +667,8 @@
       leaderLineWidth: 2,    // thickness of that line
       labelPadding: 8,       // small gap between the end of the line and the text
       startAngle: -45,       // rotates the whole plate, in degrees. 0 = first section starts at the top, positive = clockwise
+      showPlacedFoods: false,
+
 
       // ---- label template ----
       // Every category label is built from this HTML. Placeholders:
@@ -705,7 +707,7 @@
       { id: "grains", label: "Whole Grains", hint: "", degrees: 50, color: "#c79a5b" },
       { id: "starchy", label: "Starchy Vegetables", hint: "", degrees: 35, color: "#b98b4a" },
       { id: "oils", label: "Unsaturated Plant Oils", hint: "", degrees: 5, color: "#8fa14a" },
-      { id: "sugarsalt", label: "Added Sugars & Salt", hint: "", degrees: 5, color: "#6a8fb0" },
+      { id: "sugarsalt", label: "With added Sugars & Salt", hint: "", degrees: 5, color: "#6a8fb0" },
       { id: "animal", label: "Animal Protein", hint: "", degrees: 15, color: "#b4684f" },
       { id: "dairy", label: "Dairy Foods", hint: "", degrees: 15, color: "#e3cf98" },
       { id: "plant", label: "Plant Protein", hint: "", degrees: 50, color: "#9a6b3f" },
@@ -757,6 +759,17 @@ Shrimp,Krevety,🦐,animal,"Highly variable impact: some farmed shrimp can cause
 Milk,Mléko,🥛,dairy,Higher environmental impact than most plant-based drinks because dairy cattle require feed and produce methane; impacts vary by farming system and production efficiency.,"Mléko má vyšší ekologickou stopu než většina rostlinných nápojů, protože chov skotu vyžaduje krmivo a produkuje metan. Dopad se liší podle způsobu chovu.",https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a0/Mleko.jpg/960px-Mleko.jpg,C,800,250
 Cheese,Sýr,🧀,dairy,"Generally high-impact among foods because large quantities of milk are needed to make cheese; methane, feed production and processing contribute substantially.","Sýr patří mezi potraviny s relativně vysokou ekologickou stopou, protože k jeho výrobě je potřeba velké množství mléka. Významné jsou emise metanu, produkce krmiva a zpracování.",https://en.wikipedia.org/wiki/Special:Redirect/file/Cheese.jpg,C,635,30
 Butter,Máslo,🧈,dairy,Usually very high-impact per kilogram because it is concentrated from milk fat and therefore requires substantial dairy production; generally much higher-impact than plant oils.,"Máslo má obvykle velmi vysokou ekologickou stopu, protože se vyrábí z mléčného tuku a vyžaduje proto značné množství mléčné produkce. Rostlinné oleje mají obvykle nižší dopad.",https://upload.wikimedia.org/wikipedia/commons/d/d3/%C5%A0v%C3%A9dsk%C3%BD_kol%C3%A1%C4%8D_naruby_904_(cropped).JPG,B,180,15
+Pumpkin,Dýně,🎃,starchy,Generally low-impact vegetable that grows with few inputs and stores for months without refrigeration; impacts rise mainly with irrigation and long-distance transport.,"Obvykle má nízkou ekologickou stopu, roste s malými nároky a vydrží měsíce skladování bez chlazení. Dopad zvyšuje hlavně zavlažování a doprava na dlouhé vzdálenosti.",https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5c/FrenchMarketPumpkinsB.jpg/1920px-FrenchMarketPumpkinsB.jpg,A,50,100
+Parsnip,Pastinák,🥕,starchy,Generally low-impact root vegetable grown outdoors in cool climates; storage and transport can add some impact.,"Kořenová zelenina s obvykle nízkou ekologickou stopou, pěstovaná na poli v chladnějším podnebí. Dopad může zvýšit skladování a doprava.",https://en.wikipedia.org/wiki/Special:Redirect/file/PastinakePflanzegeerntet.jpg,A,30,80
+Nutritional yeast,Lahůdkové droždí,🥄,plant,"Deactivated yeast grown on sugar-rich substrates such as molasses; it is used in small amounts, so the impact per portion is low, though production and fortification require energy.","Deaktivované kvasinky pěstované na substrátech bohatých na cukr, například na melase. Používá se v malém množství, takže dopad na porci je nízký, výroba a obohacování ale vyžadují energii.",https://upload.wikimedia.org/wikipedia/commons/f/f7/Hefeflocken_Naturata.jpg,A,30,10
+Seitan,Seitan,🍢,plant,Wheat-protein meat substitute with a much lower footprint than meat; impacts come mainly from wheat growing (fertilizer) and the energy used for processing.,"Náhražka masa z pšeničné bílkoviny s mnohem nižší ekologickou stopou než maso. Dopad souvisí hlavně s pěstováním pšenice, hnojivy a energií při zpracování.",https://upload.wikimedia.org/wikipedia/commons/1/17/Seitan_Platter_(4139727246).jpg,B,250,100
+Tempeh,Tempeh,🟫,plant,Fermented soy protein with a much lower footprint than animal protein; impacts depend on how the soy is grown and on processing and transport.,"Fermentovaná sója s mnohem nižší ekologickou stopou než živočišné bílkoviny. Dopad závisí na způsobu pěstování sóji, zpracování a dopravě.",https://upload.wikimedia.org/wikipedia/commons/d/df/Sliced_tempeh.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled,B,220,100
+Spirulina,Spirulina,🌿,plant,"Protein-rich microalgae that need little land and no soil, but the footprint varies widely with the energy and nutrients used in cultivation; it is eaten in very small amounts.","Mikrořasa bohatá na bílkoviny, která nepotřebuje téměř žádnou půdu. Její stopa se ale hodně liší podle energie a živin použitých při pěstování. Konzumuje se ve velmi malém množství.",https://upload.wikimedia.org/wikipedia/commons/b/b1/Spira400xwetcr.jpg?utm_source=en.wikipedia.org,A,25,5
+Pumpkin seeds,Dýňová semínka,🌱,plant,Nutrient-dense plant protein and source of unsaturated fats with a much lower footprint than animal protein; impacts depend on farming practices and processing.,Výživný zdroj rostlinných bílkovin a nenasycených tuků s mnohem nižší ekologickou stopou než živočišné bílkoviny. Dopad závisí na způsobu pěstování a zpracování.,https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2e/Pepita_de_calabaza.jpg/1920px-Pepita_de_calabaza.jpg,A,60,30
+Button mushrooms,Žampióny,🍄,veg,"Low-impact food grown indoors on compost made from agricultural by-products and needing little land; heating, cooling and compost production add energy-related impacts.","Potravina s nízkou ekologickou stopou, pěstovaná uvnitř na kompostu ze zemědělských vedlejších produktů a s malými nároky na půdu. Dopad zvyšuje energie na vytápění, chlazení a výrobu kompostu.",https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d7/Agaricus-campestris-michoacan.jpg/1920px-Agaricus-campestris-michoacan.jpg,A,120,80
+Shiitake,Shiitake,🍄‍🟫,veg,"Generally low-impact; often grown on logs or sawdust blocks made from wood residues, with impacts depending on energy use and, for dried or imported mushrooms, transport.",Obvykle má nízkou ekologickou stopu. Pěstuje se na kmenech nebo na substrátu z dřevních zbytků a dopad závisí na spotřebě energie a u sušených či dovážených hub také na dopravě.,https://thumb.wikimedia.org/wikipedia/commons/thumb/6/64/Shiitakegrowing.jpg/960px-Shiitakegrowing.jpg?utm_source=en.wikipedia.org,B,160,80
+Chips,Chipsy,🍟,sugarsalt,"Highly processed snack high in salt and fat; impacts come from potato growing, frying oil, energy use and packaging, and it offers little nutritional value.","Vysoce zpracovaná svačina s vysokým obsahem soli a tuku. Dopad souvisí s pěstováním brambor, olejem na smažení, energií a obaly a nutričně je málo hodnotná.",https://thumb.wikimedia.org/wikipedia/commons/thumb/6/69/Potato-Chips.jpg/1920px-Potato-Chips.jpg,A,120,30
+Spelt,Špalda,🌾,grains,"Lower-impact whole grain related to wheat, often grown with fewer inputs; impacts come mainly from fertilizer use and lower yields per hectare than modern wheat.","Celozrnná obilovina příbuzná pšenici, často pěstovaná s menším množstvím vstupů. Dopad souvisí hlavně s hnojivy a s nižším výnosem z hektaru než u moderní pšenice.",https://thumb.wikimedia.org/wikipedia/commons/thumb/0/03/2009-06-20_Silvolde_02_dinkel.jpg/1920px-2009-06-20_Silvolde_02_dinkel.jpg,A,105,75
 
 `;
 
@@ -865,7 +878,7 @@ Butter,Máslo,🧈,dairy,Usually very high-impact per kilogram because it is con
         "Whole Grains": "Celozrnné obiloviny",
         "Starchy Vegetables": "Škrobová zelenina",
         "Unsaturated Plant Oils": "Nenasycené rostlinné oleje",
-        "Added Sugars & Salt": "Přidaný cukr a sůl",
+        "With added Sugars & Salt": "S přidaným cukrem a solí",
         "Animal Protein": "Živočišné bílkoviny",
         "Dairy Foods": "Mléčné výrobky",
         "Plant Protein": "Rostlinné bílkoviny",
@@ -1038,7 +1051,7 @@ Butter,Máslo,🧈,dairy,Usually very high-impact per kilogram because it is con
       });
 
       CATEGORIES.forEach(drawLabel);
-      CATEGORIES.forEach(drawPlaced);
+      if (CONFIG.showPlacedFoods) CATEGORIES.forEach(drawPlaced);
     }
 
     function drawLabel(c) {
