@@ -79,6 +79,14 @@
       --font-tutorial-note: 13px;
     }
 
+    * {
+      -webkit-user-select: none;
+      /* Safari */
+      -ms-user-select: none;
+      /* Internet Explorer/Edge */
+      user-select: none;
+    }
+
     /* a wider, white popup, only when it contains the tutorial */
     dialog#popup:has(.tutorial) {
       width: min(var(--tutorial-width), calc(100vw - 32px));
@@ -228,6 +236,11 @@
       color: var(--accent);
       font-weight: 700;
     }
+
+    .subtitle br {
+      margin-bottom: 5px;
+    }
+
 
     /* ---- info button (top left) ---- */
     .info-btn {
@@ -951,7 +964,7 @@ Spelt,Špalda,🌾,grains,"An ancient type of wheat, eaten as whole grains or wh
       cs: {
         pageTitle: "Planetární talíř – roztřiď potraviny",
         title: "Planetární zdravá strava",
-        subtitle: "Různé potraviny. <b>Různé barvy.</b> Přetáhni každou potravinu na její místo na talíři.<br><b>Dvojklikem</b> na skupiny potravin nebo jednotlivé potraviny můžete zobrazit více informací.",
+        subtitle: "Vyzkoušej poskládat talíř na celý den, který je <b>zdravý jak pro tebe tak pro planetu</b>. Přetáhni potraviny na jejich místo na talíři!<br><b>Dvojklikem</b> na skupiny potravin nebo jednotlivé potraviny můžete zobrazit více informací.",
         sorted: "Roztříděno",
         mistakes: "Chyby",
         restart: "Začít znovu",
