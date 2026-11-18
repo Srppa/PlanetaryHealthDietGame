@@ -338,6 +338,125 @@
       background: var(--plate);
     }
 
+    /* ---- group info popup (double-click a section) ---- */
+    :root {
+      --group-width: 600px;
+      /* popup width */
+      --font-group-text: 15px;
+      /* body text */
+      --font-group-stat: 26px;
+      /* big numbers in the tiles */
+      --font-group-small: 13px;
+      /* tile captions + source line */
+    }
+
+    dialog#popup:has(.group-info) {
+      width: min(var(--group-width), calc(100vw - 32px));
+    }
+
+    #popupBody .group-info {
+      font-size: var(--font-group-text);
+      line-height: 1.5;
+    }
+
+    #popupBody .group-info h2 {
+      border-left: 8px solid var(--g-color);
+      padding: 2px 32px 2px 12px;
+    }
+
+    #popupBody .group-info h3 {
+      margin: 18px 0 4px;
+      font-size: 17px;
+      color: var(--ink);
+    }
+
+    #popupBody .group-info p {
+      margin: 6px 0;
+    }
+
+    #popupBody .g-lead {
+      color: var(--ink);
+    }
+
+    .g-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 16px 0 8px;
+    }
+
+    .g-stat {
+      background: rgba(255, 255, 255, .07);
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+
+    .g-stat b {
+      display: block;
+      font-size: var(--font-group-stat);
+      line-height: 1.1;
+      color: var(--accent);
+    }
+
+    .g-stat span {
+      display: block;
+      margin-top: 4px;
+      font-size: var(--font-group-small);
+      line-height: 1.3;
+      color: var(--muted);
+    }
+
+    .g-bar {
+      height: 8px;
+      margin: 4px 0 6px;
+      border-radius: 99px;
+      background: rgba(255, 255, 255, .12);
+      overflow: hidden;
+    }
+
+    .g-bar span {
+      display: block;
+      height: 100%;
+      min-width: 4px;
+      background: var(--g-color);
+      border-radius: inherit;
+    }
+
+    #popupBody .group-info ul {
+      margin: 4px 0;
+      padding-left: 1.2em;
+      color: var(--muted);
+    }
+
+    .group-info li {
+      margin: 4px 0;
+    }
+
+    .group-info li b {
+      color: var(--ink);
+    }
+
+    #popupBody .g-tip {
+      margin-top: 14px;
+      padding: 8px 12px;
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      background: rgba(247, 201, 34, .12);
+      color: var(--ink);
+    }
+
+    #popupBody .g-source {
+      margin-top: 14px;
+      font-size: var(--font-group-small);
+      opacity: .75;
+    }
+
+    @media (max-width: 520px) {
+      .g-stats {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
     /* ---- climate class row in the food popup ---- */
     :root {
       --class-a: #2e9e4f;
@@ -704,14 +823,15 @@
        The `id` must match the `category` column of the CSV.
        ===================================================================== */
     const CATEGORIES = [
-      { id: "grains", label: "Whole Grains", hint: "", degrees: 50, color: "#c79a5b" },
-      { id: "starchy", label: "Starchy Vegetables", hint: "", degrees: 35, color: "#b98b4a" },
-      { id: "oils", label: "Unsaturated Plant Oils", hint: "", degrees: 5, color: "#8fa14a" },
-      { id: "sugarsalt", label: "With added Sugars & Salt", hint: "", degrees: 5, color: "#6a8fb0" },
+      { id: "grains", label: "Whole Grains", hint: "", degrees: 60, color: "#c79a5b" },
+      { id: "starchy", label: "Starchy Vegetables", hint: "", degrees: 10, color: "#b98b4a" },
+      { id: "oils", label: "Unsaturated Plant Oils", hint: "", degrees: 15, color: "#8fa14a" },
       { id: "animal", label: "Animal Protein", hint: "", degrees: 15, color: "#b4684f" },
-      { id: "dairy", label: "Dairy Foods", hint: "", degrees: 15, color: "#e3cf98" },
+      { id: "dairy", label: "Dairy Foods", hint: "", degrees: 25, color: "#e3cf98" },
       { id: "plant", label: "Plant Protein", hint: "", degrees: 50, color: "#9a6b3f" },
+      { id: "sugarsalt", label: "With added Sugars & Salt", hint: "", degrees: 5, color: "#6a8fb0" },
       { id: "veg", label: "Vegetables & Fruits", hint: "", degrees: 180, color: "#5e9a4f" },
+      
     ];
 
     /* =====================================================================
@@ -725,51 +845,51 @@
        ===================================================================== */
     const FOODS_CSV = `
 name,czech_name,emoji,category,additional_info,czech_additional_info,wikipedia_image_url,climate_class,climate_co2_g,portion_g
-Broccoli,Brokolice,🥦,veg,"Generally low environmental impact, especially when seasonal and locally produced; relatively low land use and emissions compared with animal foods.","Obvykle má nízkou ekologickou stopu, zejména při sezónním a místním pěstování. Ve srovnání s masem vyžaduje málo půdy a má nízké emise.",https://en.wikipedia.org/wiki/Special:Redirect/file/Broccoli.jpg,A,40,80
-Carrot,Mrkev,🥕,veg,Generally low-impact food with low greenhouse-gas emissions and land use; storage and transport can add impacts.,"Má obvykle nízkou ekologickou stopu. Vliv může zvyšovat skladování, chlazení, zavlažování a doprava na dlouhé vzdálenosti.",https://en.wikipedia.org/wiki/Special:Redirect/file/Carrot.jpg,A,30,80
-Apple,Jablko,🍎,veg,"Generally low-impact fruit; orchards can have biodiversity benefits, but pesticides, irrigation, cold storage and long-distance transport can increase impacts.","Obvykle má nízkou ekologickou stopu. Dopad mohou zvyšovat pesticidy, zavlažování, chlazené skladování a dovoz z velké vzdálenosti.",https://en.wikipedia.org/wiki/Special:Redirect/file/Apple.jpg,A,60,150
-Strawberries,Jahody,🍓,veg,"Usually low-impact compared with animal foods, but impacts can rise with heated greenhouses, intensive irrigation, refrigeration and air freight.","Ve srovnání s živočišnými potravinami mají většinou nízkou stopu, ale vytápěné skleníky, intenzivní zavlažování, chlazení a letecká doprava ji mohou výrazně zvýšit.",https://en.wikipedia.org/wiki/Special:Redirect/file/Strawberry.jpg,B,190,125
-Tomato,Rajče,🍅,veg,Low impact when grown outdoors in season; heated greenhouse production can have substantially higher energy-related emissions.,Při sezónním venkovním pěstování má relativně nízkou stopu. Rajčata z vytápěných skleníků mohou mít kvůli spotřebě energie výrazně vyšší emise.,https://en.wikipedia.org/wiki/Special:Redirect/file/Tomato.jpg,B,170,80
-Eggplant,Lilek,🍆,veg,Generally low-impact vegetable; greenhouse heating and irrigation can increase environmental impacts depending on production region.,Obvykle jde o potravinu s nízkou ekologickou stopou. Dopad může růst při pěstování ve vytápěných sklenících a při vysoké spotřebě vody.,https://en.wikipedia.org/wiki/Special:Redirect/file/Eggplant.jpg,A,50,100
-Orange,Pomeranč,🍊,veg,"Generally low-impact fruit; irrigation can be important in water-stressed regions, while long-distance refrigerated transport adds some impact.",Obvykle má nízkou ekologickou stopu. Významný může být dopad zavlažování v suchých oblastech a chlazené dopravy.,https://upload.wikimedia.org/wikipedia/commons/b/b0/OrangeBloss_wb.jpg,A,45,150
-Leafy greens,Listová zelenina,🥬,veg,"Usually low-impact and land-efficient, particularly seasonal outdoor production; heated greenhouses and refrigerated transport can increase impacts.","Listová zelenina má obvykle nízkou ekologickou stopu, zejména při sezónním venkovním pěstování. Vyšší dopad může mít vytápění skleníků a chlazení.",https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fe/Spinach_leaves.jpg/1920px-Spinach_leaves.jpg,A,40,80
-Whole-wheat bread,Celozrnný pšeničný chléb,🍞,grains,"Lower-impact staple when made mainly from whole grains; wheat production is generally much less emissions-intensive than meat, though fertilizer use and processing contribute impacts.","Celozrnný chléb má obecně nižší ekologickou stopu než živočišné potraviny. Dopad pšenice souvisí zejména s používáním hnojiv, půdou a zpracováním.",https://upload.wikimedia.org/wikipedia/commons/8/85/Vollkornbrot_z01.JPG,A,85,60
-Brown rice,Hnědá rýže,🍚,grains,Whole-grain rice is nutritious but can have relatively high climate impact among plant foods because flooded rice fields emit methane; water and land use also matter.,"Rýže je rostlinná potravina, ale její pěstování může mít relativně vysoké emise kvůli metanu vznikajícímu na zaplavených rýžových polích. Důležitá je také spotřeba vody.",https://en.wikipedia.org/wiki/Special:Redirect/file/Brown%20rice.jpg,B,330,75
-Corn,Kukuřice,🌽,grains,"Generally lower-impact than animal foods, but intensive production can involve fertilizer, pesticides and irrigation; impacts vary greatly by production system and whether used as food or feed.","Kukuřice má obvykle nižší dopad než živočišné potraviny, ale intenzivní pěstování může vyžadovat hnojiva, pesticidy a zavlažování.",https://upload.wikimedia.org/wikipedia/commons/b/b7/Summer_corn_(48286638996).jpg,A,70,100
-Oatmeal,Ovesná kaše,🥣,grains,Typically a low-impact staple with relatively low greenhouse-gas emissions and land use compared with animal-based foods.,Ovesná kaše patří mezi potraviny s relativně nízkou ekologickou stopou a obvykle má nízké emise a nároky na půdu ve srovnání s živočišnými potravinami.,https://en.wikipedia.org/wiki/Special:Redirect/file/Oatmeal.jpg,A,125,50
-Whole-grain pasta,Celozrnné těstoviny,🍝,grains,Generally low-impact when based on wheat; whole-grain versions provide more dietary fiber while having similar production impacts to other wheat pasta.,"Celozrnné těstoviny mají obecně nízkou ekologickou stopu. Hlavní dopady souvisejí s pěstováním pšenice, zejména s používáním hnojiv.",https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3f/(Pasta)_by_David_Adam_Kess_(pic.2).jpg/1920px-(Pasta)_by_David_Adam_Kess_(pic.2).jpg,A,120,75
-Potato,Brambory,🥔,starchy,"Generally low-impact and land-efficient; storage, refrigeration, fertilizer use and food waste can influence its footprint.","Brambory jsou ekologicky relativně nenáročná a výnosná plodina. Dopad může zvyšovat používání hnojiv, skladování a chlazení.",https://upload.wikimedia.org/wikipedia/commons/c/cc/Solanum_tuberosum_02.jpg,A,60,200
-Sweet potato,Batáty,🍠,starchy,"Generally low-impact crop with relatively efficient land use; impacts vary with fertilizer, irrigation, storage and transport.","Batáty mají obecně nízkou ekologickou stopu. Dopad se liší podle spotřeby vody, hnojiv, skladování a dopravy.",https://upload.wikimedia.org/wikipedia/commons/4/45/Sweet_potatoes.JPG,A,45,150
-Cassava,Maniok,🫚,starchy,"Generally low-impact and highly productive per unit of land; processing can require energy and water, while local production often reduces transport impacts.",Maniok má vysoký výnos na jednotku půdy a obecně nízkou ekologickou stopu. Zpracování může vyžadovat energii a vodu.,https://en.wikipedia.org/wiki/Special:Redirect/file/Cassava.jpg,B,150,150
-Beans,Fazole,🫘,plant,"Very climate-efficient protein source compared with meat; legumes can fix atmospheric nitrogen, reducing fertilizer needs, although processing and irrigation vary by type.","Fazole jsou velmi efektivním zdrojem rostlinných bílkovin. Luštěniny navíc vážou dusík ze vzduchu, takže mohou snižovat potřebu dusíkatých hnojiv.",https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b3/Ab_food_20.jpg/1920px-Ab_food_20.jpg,A,110,60
-Peanuts,Arašídy,🥜,plant,"Generally low-impact source of protein and unsaturated fat; land and water requirements are usually much lower than those of animal protein, though farming practices vary.",Arašídy jsou relativně ekologicky šetrným zdrojem bílkovin a nenasycených tuků. Obvykle vyžadují méně půdy než živočišné zdroje bílkovin.,https://en.wikipedia.org/wiki/Special:Redirect/file/Peanut.jpg,A,95,30
-Walnuts,Vlašské ořechy,🌰,plant,Generally lower-impact than animal protein and rich in unsaturated fats; orchards can require substantial water in dry regions and may have long production cycles.,Vlašské ořechy mají obvykle nižší dopad než živočišné zdroje bílkovin. V suchých oblastech však mohou mít vysokou spotřebu vody.,https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8f/Juglans_regia_Echte_Walnussfrucht_2.jpg/1920px-Juglans_regia_Echte_Walnussfrucht_2.jpg,A,9,30
-Edamame,Edamame,🫛,plant,"Soy-based food with generally low environmental impact and efficient protein production; impacts depend on farming, processing and transport.","Edamame je sójový produkt s obecně nízkou ekologickou stopou a efektivní produkcí bílkovin. Záleží však na způsobu pěstování, zpracování a dopravě.",https://en.wikipedia.org/wiki/Special:Redirect/file/Edamame.jpg,B,160,80
-Olive oil,Olivový olej,🫒,oils,"Usually lower-impact than animal fats, but olive cultivation can require substantial water in dry regions; production also benefits from perennial tree crops.",Olivový olej má obvykle nižší dopad než živočišné tuky. V suchých oblastech však může být významná spotřeba vody.,https://thumb.wikimedia.org/wikipedia/commons/thumb/1/16/Olives_vertes.JPG/1920px-Olives_vertes.JPG,A,90,15
-Sunflower oil,Slunečnicový olej,🌻,oils,"Generally lower-impact than animal fats; cultivation can require fertilizer and pesticides, and environmental performance varies with farming practices.",Slunečnicový olej má obecně nižší ekologickou stopu než živočišné tuky. Dopady souvisejí zejména s pěstováním a používáním hnojiv a pesticidů.,https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cd/Sunflower_head_snack.jpg/1920px-Sunflower_head_snack.jpg,A,55,15
-Rapeseed oil,Řepkový olej,🌼,oils,"Generally relatively low-impact plant oil; efficient oilseed production can have a lower footprint than animal fats, though fertilizer use is important.","Řepkový olej má relativně nízkou ekologickou stopu. Efektivní produkce olejnin může mít menší dopad než živočišné tuky, důležité je však používání hnojiv.",https://thumb.wikimedia.org/wikipedia/commons/thumb/3/37/Sesule_semena.jpg/1920px-Sesule_semena.jpg,A,55,15
-Candy,Bonbony,🍬,sugarsalt,"Low nutritional value and usually made from refined sugar and other processed ingredients; environmental impacts come mainly from sugar crops, processing and packaging.","Bonbony mají nízkou nutriční hodnotu a obsahují hlavně cukr a další zpracované suroviny. Ekologický dopad souvisí především s produkcí cukru, zpracováním a obaly.",https://en.wikipedia.org/wiki/Special:Redirect/file/Candy.jpg,A,120,30
-Donut,Kobliha,🍩,sugarsalt,Highly processed food with added sugar and often dairy/egg/fat; generally less environmentally favorable than minimally processed plant foods.,"Koblihy jsou vysoce zpracované potraviny často obsahující cukr, tuky, vejce a mléčné složky. Ve srovnání s minimálně zpracovanými rostlinnými potravinami jsou méně ekologicky příznivé.",https://en.wikipedia.org/wiki/Special:Redirect/file/Doughnut.jpg,B,210,60
-Soda,Slazená limonáda,🥤,sugarsalt,"High in added sugar and typically packaged in bottles or cans; environmental impacts include sugar production, packaging and beverage manufacturing, while its nutritional value is low.","Slazené limonády mají nízkou nutriční hodnotu a často vyžadují obaly, jejichž výroba a likvidace mají významný ekologický dopad.",https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1a/Soft_drink_shelf_2.jpg/960px-Soft_drink_shelf_2.jpg,B,150,330
-Fish,Ryby,🐟,animal,"Environmental impact varies enormously by species and fishing/farming method; small pelagic fish and well-managed fisheries can be relatively efficient, while some fisheries have high fuel use or ecological impacts.","Ekologický dopad ryb se velmi liší podle druhu a způsobu lovu či chovu. Některé druhy mohou být relativně efektivním zdrojem bílkovin, zatímco intenzivní rybolov může mít vysoké dopady na ekosystémy.",https://thumb.wikimedia.org/wikipedia/commons/thumb/8/85/H-mart_-_fish_department_-_Mackerel_-_2.JPG/3840px-H-mart_-_fish_department_-_Mackerel_-_2.JPG,C,640,125
-Chicken,Kuřecí maso,🍗,animal,"Usually lower-impact than beef and lamb but still requires feed, land and energy; poultry production also creates manure and other environmental pressures.","Kuřecí maso má obvykle nižší ekologickou stopu než hovězí, ale stále vyžaduje krmivo, půdu a energii a vytváří další environmentální zátěž spojenou s chovem.",https://thumb.wikimedia.org/wikipedia/commons/thumb/5/57/Chickens_in_market.jpg/1920px-Chickens_in_market.jpg,C,760,125
-Beef,Hovězí maso,🥩,animal,Typically among the highest-impact common foods because cattle emit methane and require substantial land and feed; reducing beef consumption usually offers large environmental benefits.,"Hovězí maso patří mezi potraviny s nejvyšší ekologickou stopou. Skot produkuje metan a vyžaduje značné množství půdy a krmiva, takže omezení spotřeby hovězího může mít velký přínos.",https://en.wikipedia.org/wiki/Special:Redirect/file/Beef.jpg,E,7500,125
-Eggs,Vejce,🥚,animal,"Moderate environmental impact relative to beef and dairy, but higher than most plant protein sources; feed production is a major part of the footprint.","Vejce mají nižší ekologickou stopu než hovězí maso a většina mléčných výrobků, ale vyšší než většina rostlinných zdrojů bílkovin. Významnou část dopadu tvoří produkce krmiva.",https://thumb.wikimedia.org/wikipedia/commons/thumb/1/12/6-Pack-Chicken-Eggs.jpg/3840px-6-Pack-Chicken-Eggs.jpg,C,470,100
-Shrimp,Krevety,🦐,animal,"Highly variable impact: some farmed shrimp can cause substantial emissions and habitat loss, while other systems are better managed; wild trawling can have high fuel use and seabed impacts.","Ekologický dopad krevet se výrazně liší podle způsobu produkce. Některé chovy mohou být spojeny s ničením stanovišť a vysokými emisemi, zatímco vlečné sítě mohou mít vysokou spotřebu paliva a dopad na mořské dno.",https://en.wikipedia.org/wiki/Special:Redirect/file/Shrimp.jpg,D,1180,100
-Milk,Mléko,🥛,dairy,Higher environmental impact than most plant-based drinks because dairy cattle require feed and produce methane; impacts vary by farming system and production efficiency.,"Mléko má vyšší ekologickou stopu než většina rostlinných nápojů, protože chov skotu vyžaduje krmivo a produkuje metan. Dopad se liší podle způsobu chovu.",https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a0/Mleko.jpg/960px-Mleko.jpg,C,800,250
-Cheese,Sýr,🧀,dairy,"Generally high-impact among foods because large quantities of milk are needed to make cheese; methane, feed production and processing contribute substantially.","Sýr patří mezi potraviny s relativně vysokou ekologickou stopou, protože k jeho výrobě je potřeba velké množství mléka. Významné jsou emise metanu, produkce krmiva a zpracování.",https://en.wikipedia.org/wiki/Special:Redirect/file/Cheese.jpg,C,635,30
-Butter,Máslo,🧈,dairy,Usually very high-impact per kilogram because it is concentrated from milk fat and therefore requires substantial dairy production; generally much higher-impact than plant oils.,"Máslo má obvykle velmi vysokou ekologickou stopu, protože se vyrábí z mléčného tuku a vyžaduje proto značné množství mléčné produkce. Rostlinné oleje mají obvykle nižší dopad.",https://upload.wikimedia.org/wikipedia/commons/d/d3/%C5%A0v%C3%A9dsk%C3%BD_kol%C3%A1%C4%8D_naruby_904_(cropped).JPG,B,180,15
-Pumpkin,Dýně,🎃,starchy,Generally low-impact vegetable that grows with few inputs and stores for months without refrigeration; impacts rise mainly with irrigation and long-distance transport.,"Obvykle má nízkou ekologickou stopu, roste s malými nároky a vydrží měsíce skladování bez chlazení. Dopad zvyšuje hlavně zavlažování a doprava na dlouhé vzdálenosti.",https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5c/FrenchMarketPumpkinsB.jpg/1920px-FrenchMarketPumpkinsB.jpg,A,50,100
-Parsnip,Pastinák,🥕,starchy,Generally low-impact root vegetable grown outdoors in cool climates; storage and transport can add some impact.,"Kořenová zelenina s obvykle nízkou ekologickou stopou, pěstovaná na poli v chladnějším podnebí. Dopad může zvýšit skladování a doprava.",https://en.wikipedia.org/wiki/Special:Redirect/file/PastinakePflanzegeerntet.jpg,A,30,80
-Nutritional yeast,Lahůdkové droždí,🥄,plant,"Deactivated yeast grown on sugar-rich substrates such as molasses; it is used in small amounts, so the impact per portion is low, though production and fortification require energy.","Deaktivované kvasinky pěstované na substrátech bohatých na cukr, například na melase. Používá se v malém množství, takže dopad na porci je nízký, výroba a obohacování ale vyžadují energii.",https://upload.wikimedia.org/wikipedia/commons/f/f7/Hefeflocken_Naturata.jpg,A,30,10
-Seitan,Seitan,🍢,plant,Wheat-protein meat substitute with a much lower footprint than meat; impacts come mainly from wheat growing (fertilizer) and the energy used for processing.,"Náhražka masa z pšeničné bílkoviny s mnohem nižší ekologickou stopou než maso. Dopad souvisí hlavně s pěstováním pšenice, hnojivy a energií při zpracování.",https://upload.wikimedia.org/wikipedia/commons/1/17/Seitan_Platter_(4139727246).jpg,B,250,100
-Tempeh,Tempeh,🟫,plant,Fermented soy protein with a much lower footprint than animal protein; impacts depend on how the soy is grown and on processing and transport.,"Fermentovaná sója s mnohem nižší ekologickou stopou než živočišné bílkoviny. Dopad závisí na způsobu pěstování sóji, zpracování a dopravě.",https://upload.wikimedia.org/wikipedia/commons/d/df/Sliced_tempeh.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled,B,220,100
-Spirulina,Spirulina,🌿,plant,"Protein-rich microalgae that need little land and no soil, but the footprint varies widely with the energy and nutrients used in cultivation; it is eaten in very small amounts.","Mikrořasa bohatá na bílkoviny, která nepotřebuje téměř žádnou půdu. Její stopa se ale hodně liší podle energie a živin použitých při pěstování. Konzumuje se ve velmi malém množství.",https://upload.wikimedia.org/wikipedia/commons/b/b1/Spira400xwetcr.jpg?utm_source=en.wikipedia.org,A,25,5
-Pumpkin seeds,Dýňová semínka,🌱,plant,Nutrient-dense plant protein and source of unsaturated fats with a much lower footprint than animal protein; impacts depend on farming practices and processing.,Výživný zdroj rostlinných bílkovin a nenasycených tuků s mnohem nižší ekologickou stopou než živočišné bílkoviny. Dopad závisí na způsobu pěstování a zpracování.,https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2e/Pepita_de_calabaza.jpg/1920px-Pepita_de_calabaza.jpg,A,60,30
-Button mushrooms,Žampióny,🍄,veg,"Low-impact food grown indoors on compost made from agricultural by-products and needing little land; heating, cooling and compost production add energy-related impacts.","Potravina s nízkou ekologickou stopou, pěstovaná uvnitř na kompostu ze zemědělských vedlejších produktů a s malými nároky na půdu. Dopad zvyšuje energie na vytápění, chlazení a výrobu kompostu.",https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d7/Agaricus-campestris-michoacan.jpg/1920px-Agaricus-campestris-michoacan.jpg,A,120,80
-Shiitake,Shiitake,🍄‍🟫,veg,"Generally low-impact; often grown on logs or sawdust blocks made from wood residues, with impacts depending on energy use and, for dried or imported mushrooms, transport.",Obvykle má nízkou ekologickou stopu. Pěstuje se na kmenech nebo na substrátu z dřevních zbytků a dopad závisí na spotřebě energie a u sušených či dovážených hub také na dopravě.,https://thumb.wikimedia.org/wikipedia/commons/thumb/6/64/Shiitakegrowing.jpg/960px-Shiitakegrowing.jpg?utm_source=en.wikipedia.org,B,160,80
-Chips,Chipsy,🍟,sugarsalt,"Highly processed snack high in salt and fat; impacts come from potato growing, frying oil, energy use and packaging, and it offers little nutritional value.","Vysoce zpracovaná svačina s vysokým obsahem soli a tuku. Dopad souvisí s pěstováním brambor, olejem na smažení, energií a obaly a nutričně je málo hodnotná.",https://thumb.wikimedia.org/wikipedia/commons/thumb/6/69/Potato-Chips.jpg/1920px-Potato-Chips.jpg,A,120,30
-Spelt,Špalda,🌾,grains,"Lower-impact whole grain related to wheat, often grown with fewer inputs; impacts come mainly from fertilizer use and lower yields per hectare than modern wheat.","Celozrnná obilovina příbuzná pšenici, často pěstovaná s menším množstvím vstupů. Dopad souvisí hlavně s hnojivy a s nižším výnosem z hektaru než u moderní pšenice.",https://thumb.wikimedia.org/wikipedia/commons/thumb/0/03/2009-06-20_Silvolde_02_dinkel.jpg/1920px-2009-06-20_Silvolde_02_dinkel.jpg,A,105,75
+Broccoli,Brokolice,🥦,veg,"A green vegetable full of vitamin C, vitamin K and folate, with plenty of fibre and very few calories. Low footprint, especially when it is in season and grown nearby.","Zelená zelenina plná vitaminu C, vitaminu K a kyseliny listové, s velkým množstvím vlákniny a velmi malým množstvím kalorií. Má nízkou ekologickou stopu, hlavně když je sezónní a vypěstovaná nablízku.",https://en.wikipedia.org/wiki/Special:Redirect/file/Broccoli.jpg,A,40,80
+Carrot,Mrkev,🥕,veg,"A crunchy orange root that is mostly water and fibre, with very little starch. Its colour comes from beta-carotene, which the body turns into vitamin A. It has one of the lowest footprints of all foods and keeps well through winter.","Křupavý oranžový kořen, který je hlavně z vody a vlákniny a škrobu obsahuje jen velmi málo. Barvu mu dává beta-karoten, ze kterého si tělo vyrábí vitamin A. Patří k potravinám s nejnižší stopou a dobře vydrží přes zimu.",https://en.wikipedia.org/wiki/Special:Redirect/file/Carrot.jpg,A,30,80
+Apple,Jablko,🍎,veg,"A fruit with fibre (pectin) and vitamin C – a perfect snack. Apples grow well in Czechia and keep for months, so they rarely need long transport.","Ovoce s vlákninou (pektinem) a vitaminem C – ideální svačina. Jablka se v Česku dobře pěstují a vydrží měsíce, takže je obvykle není nutné dovážet zdaleka.",https://en.wikipedia.org/wiki/Special:Redirect/file/Apple.jpg,A,60,150
+Strawberries,Jahody,🍓,veg,"Juicy berries packed with vitamin C and antioxidants; their sweetness is natural fruit sugar, not added sugar. Low footprint in summer, but out of season they may come from heated greenhouses or by plane, which raises it a lot.","Šťavnaté plody plné vitaminu C a antioxidantů; jejich sladkost je přirozený ovocný cukr, ne přidaný. V létě mají nízkou stopu, mimo sezónu ale mohou pocházet z vytápěných skleníků nebo z letadla, a pak je stopa mnohem vyšší.",https://en.wikipedia.org/wiki/Special:Redirect/file/Strawberry.jpg,B,190,125
+Tomato,Rajče,🍅,veg,"Botanically a fruit, eaten as a vegetable. It gives vitamin C, potassium and lycopene, a red pigment that works as an antioxidant. Outdoor summer tomatoes have a low footprint; winter ones from heated greenhouses a much higher one.","Botanicky je to plod, jíme ho ale jako zeleninu. Dodává vitamin C, draslík a lykopen, červené barvivo s antioxidačními účinky. Letní rajčata z pole mají nízkou stopu, zimní z vytápěných skleníků mnohem vyšší.",https://en.wikipedia.org/wiki/Special:Redirect/file/Tomato.jpg,B,170,80
+Eggplant,Lilek,🍆,veg,"A purple vegetable with fibre and very few calories; when cooked it soaks up flavours (and oil). Usually a low footprint, higher when grown in heated greenhouses.","Fialová zelenina s vlákninou a velmi malým množstvím kalorií; při vaření nasává chutě (i olej). Obvykle má nízkou stopu, vyšší při pěstování ve vytápěných sklenících.",https://en.wikipedia.org/wiki/Special:Redirect/file/Eggplant.jpg,A,50,100
+Orange,Pomeranč,🍊,veg,"A citrus fruit famous for vitamin C, with fibre and folate too. The whole fruit gives you more fibre than juice. Low footprint, even though it travels a long way to Czechia.","Citrusový plod známý vitaminem C, obsahuje také vlákninu a kyselinu listovou. Celý plod dá víc vlákniny než džus. Má nízkou stopu, i když do Česka cestuje zdaleka.",https://upload.wikimedia.org/wikipedia/commons/b/b0/OrangeBloss_wb.jpg,A,45,150
+Leafy greens,Listová zelenina,🥬,veg,"Spinach, lettuce or kale give folate, vitamin K, iron and calcium with almost no calories – dark green leaves are among the most nutritious foods per bite. Low footprint in season; heated greenhouses raise it.","Špenát, salát nebo kadeřávek dodávají kyselinu listovou, vitamin K, železo a vápník téměř bez kalorií – tmavě zelené listy patří k nejvýživnějším potravinám vůbec. V sezóně mají nízkou stopu, vytápěné skleníky ji zvyšují.",https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fe/Spinach_leaves.jpg/1920px-Spinach_leaves.jpg,A,40,80
+Whole-wheat bread,Celozrnný pšeničný chléb,🍞,grains,"Baked from flour that keeps the whole grain (bran and germ), so it gives slow-release energy from complex carbohydrates, plus fibre, B vitamins, iron and magnesium. Wheat has a low footprint; most of it comes from fertilizer.","Peče se z mouky z celého zrna (včetně otrub a klíčku), takže dodává pozvolna uvolňovanou energii ze složených sacharidů, vlákninu, vitaminy B, železo a hořčík. Pšenice má nízkou stopu, většina pochází z hnojiv.",https://upload.wikimedia.org/wikipedia/commons/8/85/Vollkornbrot_z01.JPG,A,85,60
+Brown rice,Hnědá rýže,🍚,grains,"A cereal grain that keeps its bran layer, so it has more fibre, magnesium and B vitamins than white rice; its energy comes mainly from starch. Rice has a higher footprint than other grains because flooded paddy fields release methane.","Obilnina, která si ponechává obalovou vrstvu (otruby), proto má víc vlákniny, hořčíku a vitaminů B než bílá rýže; energii dodává hlavně škrob. Rýže má vyšší stopu než jiné obiloviny, protože zaplavená rýžová pole uvolňují metan.",https://en.wikipedia.org/wiki/Special:Redirect/file/Brown%20rice.jpg,B,330,75
+Corn,Kukuřice,🌽,grains,"Maize is a cereal grain: whole kernels, polenta or popcorn give energy from starch, plus fibre and B vitamins. Low footprint, but much of the world's maize is grown as animal feed, not food for people.","Kukuřice je obilnina: celá zrna, polenta nebo popcorn dodávají energii ze škrobu, vlákninu a vitaminy B. Má nízkou stopu, velká část světové kukuřice se ale pěstuje jako krmivo pro zvířata, ne jako jídlo pro lidi.",https://upload.wikimedia.org/wikipedia/commons/b/b7/Summer_corn_(48286638996).jpg,A,70,100
+Oatmeal,Ovesná kaše,🥣,grains,"Made from whole oat grains. Oats contain beta-glucan, a fibre that helps lower cholesterol and keeps you full for a long time. A low-footprint grain that grows well in Czechia.","Vyrábí se z celých ovesných zrn. Oves obsahuje beta-glukan, vlákninu, která pomáhá snižovat cholesterol a zasytí na dlouho. Je to obilnina s nízkou stopou, která se v Česku dobře pěstuje.",https://en.wikipedia.org/wiki/Special:Redirect/file/Oatmeal.jpg,A,125,50
+Whole-grain pasta,Celozrnné těstoviny,🍝,grains,Pasta from whole-grain wheat flour: energy from complex carbohydrates and about twice the fibre of white pasta. Low footprint; the main impact is fertilizer for the wheat.,"Těstoviny z celozrnné pšeničné mouky: energie ze složených sacharidů a zhruba dvakrát víc vlákniny než bílé těstoviny. Mají nízkou stopu, hlavní dopad mají hnojiva při pěstování pšenice.",https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3f/(Pasta)_by_David_Adam_Kess_(pic.2).jpg/1920px-(Pasta)_by_David_Adam_Kess_(pic.2).jpg,A,120,75
+Potato,Brambory,🥔,starchy,"A tuber that stores its energy as starch. It also gives vitamin C and potassium, and most of its fibre is in the skin. Boiled or baked is better than fried. Very low footprint: potatoes give a lot of food from a small field.","Hlíza, která si zásoby energie ukládá ve formě škrobu. Dodává také vitamin C a draslík, většina vlákniny je ve slupce. Lepší vařené nebo pečené než smažené. Má velmi nízkou stopu: z malého pole dají hodně jídla.",https://upload.wikimedia.org/wikipedia/commons/c/cc/Solanum_tuberosum_02.jpg,A,60,200
+Sweet potato,Batáty,🍠,starchy,"A sweet-tasting root full of starch; its orange flesh is rich in beta-carotene (vitamin A), with fibre and potassium too. Low footprint, but in Czechia it is mostly imported.","Sladce chutnající kořen plný škrobu; oranžová dužina je bohatá na beta-karoten (vitamin A), obsahuje i vlákninu a draslík. Má nízkou stopu, do Česka se ale většinou dováží.",https://upload.wikimedia.org/wikipedia/commons/4/45/Sweet_potatoes.JPG,A,45,150
+Cassava,Maniok,🫚,starchy,"A tropical root that is almost pure starch with very little protein. It must always be cooked, because raw cassava is poisonous. It is a staple for hundreds of millions of people and grows even in poor soil.","Tropický kořen, který je téměř čistý škrob a obsahuje velmi málo bílkovin. Vždy se musí tepelně upravit, protože syrový maniok je jedovatý. Je základní potravinou stovek milionů lidí a roste i na chudé půdě.",https://en.wikipedia.org/wiki/Special:Redirect/file/Cassava.jpg,B,150,150
+Beans,Fazole,🫘,plant,"A legume packed with protein and fibre, plus iron, zinc and folate. Bean plants take nitrogen from the air, so they need little fertilizer – one of the most climate-friendly protein sources.","Luštěnina plná bílkovin a vlákniny, navíc obsahuje železo, zinek a kyselinu listovou. Fazole si berou dusík ze vzduchu, takže potřebují málo hnojiv – patří k nejšetrnějším zdrojům bílkovin.",https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b3/Ab_food_20.jpg/1920px-Ab_food_20.jpg,A,110,60
+Peanuts,Arašídy,🥜,plant,"Despite the name, peanuts are legumes, not nuts. They are rich in protein, unsaturated fat, vitamin E and magnesium; a handful (30 g) is a good portion. Low footprint compared with animal protein.","Přestože se jim říká oříšky, arašídy jsou luštěniny. Jsou bohaté na bílkoviny, nenasycené tuky, vitamin E a hořčík; hrst (30 g) je dobrá porce. Ve srovnání s živočišnými bílkovinami mají nízkou stopu.",https://en.wikipedia.org/wiki/Special:Redirect/file/Peanut.jpg,A,95,30
+Walnuts,Vlašské ořechy,🌰,plant,"Nuts with protein, fibre and healthy unsaturated fats, including plant omega-3 fatty acids. Walnut trees grow well in Czechia and store carbon for decades, so local walnuts have a very low footprint.","Ořechy s bílkovinami, vlákninou a zdravými nenasycenými tuky včetně rostlinných omega-3 mastných kyselin. Ořešáky v Česku dobře rostou a desítky let ukládají uhlík, takže místní vlašské ořechy mají velmi nízkou stopu.",https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8f/Juglans_regia_Echte_Walnussfrucht_2.jpg/1920px-Juglans_regia_Echte_Walnussfrucht_2.jpg,A,9,30
+Edamame,Edamame,🫛,plant,"Young green soybeans in the pod. Soy is a legume with complete protein (all essential amino acids), plus fibre, iron and folate. Low footprint – although most soy grown worldwide ends up as animal feed.","Mladé zelené sójové boby v luscích. Sója je luštěnina s plnohodnotnou bílkovinou (obsahuje všechny esenciální aminokyseliny), k tomu vlákninu, železo a kyselinu listovou. Má nízkou stopu – většina sóji na světě ale skončí jako krmivo pro zvířata.",https://en.wikipedia.org/wiki/Special:Redirect/file/Edamame.jpg,B,160,80
+Olive oil,Olivový olej,🫒,oils,"Pressed from olives; mostly monounsaturated fat, which helps keep blood cholesterol healthy, plus vitamin E. The key fat of the Mediterranean diet. Olive groves can use a lot of water in dry regions.","Lisuje se z oliv; obsahuje hlavně mononenasycené tuky, které pomáhají udržet zdravou hladinu cholesterolu, a vitamin E. Je hlavním tukem středomořské stravy. Olivové háje mohou v suchých oblastech spotřebovat hodně vody.",https://thumb.wikimedia.org/wikipedia/commons/thumb/1/16/Olives_vertes.JPG/1920px-Olives_vertes.JPG,A,90,15
+Sunflower oil,Slunečnicový olej,🌻,oils,Pressed from sunflower seeds; rich in polyunsaturated fat (omega-6) and vitamin E. It is liquid at room temperature because it has little saturated fat. Sunflowers grow in Czechia too; the impact comes mainly from fertilizer and pesticides.,"Lisuje se ze slunečnicových semen; je bohatý na polynenasycené tuky (omega-6) a vitamin E. Při pokojové teplotě je tekutý, protože obsahuje málo nasycených tuků. Slunečnice roste i v Česku; dopad souvisí hlavně s hnojivy a pesticidy.",https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cd/Sunflower_head_snack.jpg/1920px-Sunflower_head_snack.jpg,A,55,15
+Rapeseed oil,Řepkový olej,🌼,oils,"Pressed from the seeds of rapeseed, the bright yellow crop in Czech fields. It has very little saturated fat and contains plant omega-3 fatty acids. A local oil with a relatively low footprint; the main impact is fertilizer.","Lisuje se ze semen řepky, kterou znáš ze žlutých polí v Česku. Obsahuje velmi málo nasycených tuků a má rostlinné omega-3 mastné kyseliny. Je to místní olej s relativně nízkou stopou; hlavní dopad mají hnojiva.",https://thumb.wikimedia.org/wikipedia/commons/thumb/3/37/Sesule_semena.jpg/1920px-Sesule_semena.jpg,A,55,15
+Candy,Bonbony,🍬,sugarsalt,"Almost pure sugar with flavourings and colours: lots of energy but no fibre, vitamins or protein (""empty calories""). A few sweets can use up the whole daily limit of about 30 g of added sugar. The impact comes from sugar crops, processing and packaging.","Téměř čistý cukr s aromaty a barvivy: hodně energie, ale žádná vláknina, vitaminy ani bílkoviny („prázdné kalorie“). Pár bonbonů může vyčerpat celý denní limit zhruba 30 g přidaného cukru. Dopad souvisí s pěstováním cukrové řepy či třtiny, zpracováním a obaly.",https://en.wikipedia.org/wiki/Special:Redirect/file/Candy.jpg,A,120,30
+Donut,Kobliha,🍩,sugarsalt,"White-flour dough fried in fat and covered with sugar glaze or filling: lots of added sugar and fat, little fibre. A treat, not an everyday food. Eggs, milk and frying fat add to its footprint.","Těsto z bílé mouky smažené v tuku, s cukrovou polevou nebo náplní: hodně přidaného cukru a tuku, málo vlákniny. Je to pamlsek, ne každodenní jídlo. Vejce, mléko a tuk na smažení zvyšují jeho stopu.",https://en.wikipedia.org/wiki/Special:Redirect/file/Doughnut.jpg,B,210,60
+Soda,Slazená limonáda,🥤,sugarsalt,"A sweetened soft drink: one 330 ml can has about 35 g of sugar – more than the whole daily limit for added sugar (about 30 g). Sugary drinks are linked to weight gain, type 2 diabetes and tooth decay, and cans and bottles add packaging waste.","Slazený nápoj: jedna plechovka (330 ml) obsahuje zhruba 35 g cukru – víc než celý denní limit přidaného cukru (asi 30 g). Slazené nápoje souvisejí s přibýváním na váze, cukrovkou 2. typu a zubním kazem a plechovky a lahve navíc vytvářejí odpad z obalů.",https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1a/Soft_drink_shelf_2.jpg/960px-Soft_drink_shelf_2.jpg,B,150,330
+Fish,Ryby,🐟,animal,"High-quality protein, vitamin D, iodine and especially omega-3 fatty acids, which support the brain and heart. About two portions a week are recommended. The footprint depends a lot on the species and on how it was caught or farmed.","Plnohodnotné bílkoviny, vitamin D, jód a hlavně omega-3 mastné kyseliny, které podporují mozek a srdce. Doporučují se asi dvě porce týdně. Stopa hodně závisí na druhu ryby a na tom, jak byla ulovena nebo chována.",https://thumb.wikimedia.org/wikipedia/commons/thumb/8/85/H-mart_-_fish_department_-_Mackerel_-_2.JPG/3840px-H-mart_-_fish_department_-_Mackerel_-_2.JPG,C,640,125
+Chicken,Kuřecí maso,🍗,animal,"Lean meat with complete protein and B vitamins (B3, B6); the planetary health diet suggests about two portions of poultry a week. Lower footprint than beef, but still much higher than beans or lentils, because chickens need feed.","Libové maso s plnohodnotnou bílkovinou a vitaminy B (B3, B6); planetární strava doporučuje asi dvě porce drůbeže týdně. Má nižší stopu než hovězí, ale stále mnohem vyšší než fazole nebo čočka, protože kuřata potřebují krmivo.",https://thumb.wikimedia.org/wikipedia/commons/thumb/5/57/Chickens_in_market.jpg/1920px-Chickens_in_market.jpg,C,760,125
+Beef,Hovězí maso,🥩,animal,"Red meat with protein, easily absorbed iron, zinc and vitamin B12, but also saturated fat; eating a lot of red meat is linked to heart disease and type 2 diabetes, so about one portion a week is the most recommended. Cattle burp methane and need lots of land: beef has the highest footprint on the list.","Červené maso s bílkovinami, dobře vstřebatelným železem, zinkem a vitaminem B12, ale i s nasycenými tuky; vysoká spotřeba červeného masa souvisí s nemocemi srdce a cukrovkou 2. typu, proto se doporučuje nejvýše asi jedna porce týdně. Skot vypouští metan a potřebuje hodně půdy: hovězí má nejvyšší stopu ze všech potravin v seznamu.",https://en.wikipedia.org/wiki/Special:Redirect/file/Beef.jpg,E,7500,125
+Eggs,Vejce,🥚,animal,"Small but rich in high-quality protein, vitamin B12, vitamin D and choline; the planetary health diet counts about two eggs a week. The footprint is moderate: lower than meat, higher than most plant proteins, mostly because of hen feed.","Malá, ale bohatá na plnohodnotné bílkoviny, vitamin B12, vitamin D a cholin; planetární strava počítá asi se dvěma vejci týdně. Stopa je střední: nižší než u masa, vyšší než u většiny rostlinných bílkovin, hlavně kvůli krmivu pro slepice.",https://thumb.wikimedia.org/wikipedia/commons/thumb/1/12/6-Pack-Chicken-Eggs.jpg/3840px-6-Pack-Chicken-Eggs.jpg,C,470,100
+Shrimp,Krevety,🦐,animal,"Seafood with lean protein, iodine and selenium and very little fat. The footprint varies a lot: some shrimp farms replace mangrove forests, and bottom trawling damages the seabed and burns a lot of fuel.","Mořské plody s libovou bílkovinou, jódem a selenem a velmi malým množstvím tuku. Stopa se hodně liší: kvůli některým krevetím farmám mizí mangrovové lesy a vlečné sítě poškozují mořské dno a spotřebují hodně paliva.",https://en.wikipedia.org/wiki/Special:Redirect/file/Shrimp.jpg,D,1180,100
+Milk,Mléko,🥛,dairy,"A drink from cows (or goats and sheep) rich in calcium for bones and teeth, plus protein, vitamins B2 and B12 and iodine. About one glass of milk or its equivalent a day is enough. Dairy cows release methane, so milk has a higher footprint than plant drinks.","Nápoj od krav (nebo koz a ovcí) bohatý na vápník pro kosti a zuby, k tomu bílkoviny, vitaminy B2 a B12 a jód. Stačí asi jedna sklenice mléka nebo jeho ekvivalent denně. Dojnice vypouštějí metan, proto má mléko vyšší stopu než rostlinné nápoje.",https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a0/Mleko.jpg/960px-Mleko.jpg,C,800,250
+Cheese,Sýr,🧀,dairy,"Concentrated milk: about 10 litres of milk make 1 kg of hard cheese, so it is rich in calcium and protein, but also in saturated fat and salt. Because it needs so much milk, cheese has a high footprint per kilogram.","Zahuštěné mléko: z asi 10 litrů mléka vznikne 1 kg tvrdého sýra, proto je bohatý na vápník a bílkoviny, ale i na nasycené tuky a sůl. Protože potřebuje tolik mléka, má sýr vysokou stopu na kilogram.",https://en.wikipedia.org/wiki/Special:Redirect/file/Cheese.jpg,C,635,30
+Butter,Máslo,🧈,dairy,"Made by churning cream, the fatty part of milk: about 80 % fat, mostly saturated, with some vitamin A. Plant oils are a healthier everyday choice for cooking. Butter needs lots of milk, so its footprint per kilogram is very high.","Vyrábí se stloukáním smetany, tedy tučné části mléka: obsahuje asi 80 % tuku, většinou nasyceného, a trochu vitaminu A. Pro každodenní vaření jsou zdravější volbou rostlinné oleje. Máslo potřebuje hodně mléka, proto má na kilogram velmi vysokou stopu.",https://upload.wikimedia.org/wikipedia/commons/d/d3/%C5%A0v%C3%A9dsk%C3%BD_kol%C3%A1%C4%8D_naruby_904_(cropped).JPG,B,180,15
+Pumpkin,Dýně,🎃,starchy,"Firm winter squash such as Hokkaido has more starch than most vegetables, which makes it filling, plus beta-carotene and fibre. It grows easily in Czechia and keeps for months without a fridge, so its footprint is low.","Pevné zimní dýně, například Hokkaido, obsahují víc škrobu než většina zeleniny, a proto dobře zasytí; mají také beta-karoten a vlákninu. V Česku se snadno pěstují a vydrží měsíce bez lednice, takže mají nízkou stopu.",https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5c/FrenchMarketPumpkinsB.jpg/1920px-FrenchMarketPumpkinsB.jpg,A,50,100
+Parsnip,Pastinák,🥕,starchy,"A pale root related to carrot, but much starchier, so it gives more energy, plus fibre, potassium and vitamin C. It grows outdoors in cool climates and keeps through winter, so its footprint is low.","Světlý kořen příbuzný mrkvi, ale mnohem škrobovitější, takže dodá víc energie; obsahuje také vlákninu, draslík a vitamin C. Pěstuje se venku v chladnějším podnebí a vydrží přes zimu, takže má nízkou stopu.",https://en.wikipedia.org/wiki/Special:Redirect/file/PastinakePflanzegeerntet.jpg,A,30,80
+Nutritional yeast,Lahůdkové droždí,🥄,plant,"Dried, inactive yeast flakes with a cheesy taste; about half of their weight is protein, and they are rich in B vitamins (often fortified with B12, important for vegans). Only a spoonful is used, so the footprint per portion is small.","Sušené neaktivní kvasnice ve vločkách se sýrovou chutí; zhruba polovinu jejich hmotnosti tvoří bílkoviny a jsou bohaté na vitaminy B (často obohacené o B12, důležitý pro vegany). Používá se jen lžíce, takže stopa na porci je malá.",https://upload.wikimedia.org/wikipedia/commons/f/f7/Hefeflocken_Naturata.jpg,A,30,10
+Seitan,Seitan,🍢,plant,"Made from wheat gluten, the protein part of wheat flour, so it is very high in protein and is often used instead of meat. Not suitable for people with coeliac disease. Its footprint is far lower than meat.","Vyrábí se z lepku, tedy z bílkovinné části pšeničné mouky, proto obsahuje velmi mnoho bílkovin a často nahrazuje maso. Není vhodný pro lidi s celiakií. Jeho stopa je mnohem nižší než u masa.",https://upload.wikimedia.org/wikipedia/commons/1/17/Seitan_Platter_(4139727246).jpg,B,250,100
+Tempeh,Tempeh,🟫,plant,"A firm cake of whole soybeans fermented by a mould, originally from Indonesia. High in protein and fibre, with iron and magnesium; fermentation makes it easier to digest. Much lower footprint than meat.","Pevný blok z celých sójových bobů fermentovaných plísní, původem z Indonésie. Obsahuje hodně bílkovin a vlákniny, také železo a hořčík; díky fermentaci je lépe stravitelný. Má mnohem nižší stopu než maso.",https://upload.wikimedia.org/wikipedia/commons/d/df/Sliced_tempeh.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled,B,220,100
+Spirulina,Spirulina,🌿,plant,"A blue-green microalga sold as powder: about 60 % of its dry weight is protein, and it contains iron. Its vitamin B12 is mostly a form the body cannot use. It needs almost no land, but its footprint depends on the energy used to grow it.","Modrozelená mikrořasa prodávaná jako prášek: asi 60 % její sušiny tvoří bílkoviny a obsahuje železo. Vitamin B12 v ní je ale většinou ve formě, kterou tělo nevyužije. Nepotřebuje skoro žádnou půdu, stopa však závisí na energii potřebné k pěstování.",https://upload.wikimedia.org/wikipedia/commons/b/b1/Spira400xwetcr.jpg?utm_source=en.wikipedia.org,A,25,5
+Pumpkin seeds,Dýňová semínka,🌱,plant,"Seeds rich in protein, unsaturated fat, magnesium, zinc and iron; a handful makes a good snack or salad topping. Their footprint is much lower than animal protein.","Semínka bohatá na bílkoviny, nenasycené tuky, hořčík, zinek a železo; hrst je skvělá svačina nebo posyp salátu. Jejich stopa je mnohem nižší než u živočišných bílkovin.",https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2e/Pepita_de_calabaza.jpg/1920px-Pepita_de_calabaza.jpg,A,60,30
+Button mushrooms,Žampióny,🍄,veg,"Mushrooms are fungi, not plants, but in your diet they count as vegetables: few calories, fibre, B vitamins and potassium; under sunlight or UV light they even make vitamin D. They grow indoors on compost from farm waste and need very little land.","Houby nejsou rostliny, ve stravě se ale počítají k zelenině: málo kalorií, vláknina, vitaminy B a draslík; na slunci nebo pod UV světlem si dokonce vytvoří vitamin D. Pěstují se uvnitř na kompostu ze zemědělských zbytků a potřebují velmi málo půdy.",https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d7/Agaricus-campestris-michoacan.jpg/1920px-Agaricus-campestris-michoacan.jpg,A,120,80
+Shiitake,Shiitake,🍄‍🟫,veg,"An Asian mushroom with a rich, savoury (umami) taste. Like other mushrooms it counts as a vegetable: low in calories, with fibre and B vitamins. It grows on logs or sawdust from wood waste; dried imported shiitake travel far.","Asijská houba s výraznou, plnou (umami) chutí. Jako jiné houby se počítá k zelenině: málo kalorií, vláknina a vitaminy B. Roste na kmenech nebo pilinách z dřevního odpadu; sušené dovážené shiitake ale cestují zdaleka.",https://thumb.wikimedia.org/wikipedia/commons/thumb/6/64/Shiitakegrowing.jpg/960px-Shiitakegrowing.jpg?utm_source=en.wikipedia.org,B,160,80
+Chips,Chipsy,🍟,sugarsalt,"Thin potato slices fried in oil and heavily salted – frying and salt turn a potato into a fatty, salty snack. A large bag can hold a big part of the daily salt limit (5 g). The impact comes from frying oil, energy and packaging.","Tenké plátky brambor smažené v oleji a silně osolené – smažení a sůl udělají z brambory tučnou a slanou pochutinu. Velký sáček může obsahovat značnou část denního limitu soli (5 g). Dopad souvisí s olejem na smažení, energií a obaly.",https://thumb.wikimedia.org/wikipedia/commons/thumb/6/69/Potato-Chips.jpg/1920px-Potato-Chips.jpg,A,120,30
+Spelt,Špalda,🌾,grains,"An ancient type of wheat, eaten as whole grains or whole-grain flour; it gives slow energy from starch, plus fibre, protein and B vitamins. It needs less fertilizer than modern wheat but gives lower yields per hectare.","Starobylý druh pšenice, který se jí jako celá zrna nebo celozrnná mouka; dodává pozvolnou energii ze škrobu, vlákninu, bílkoviny a vitaminy B. Potřebuje méně hnojiv než moderní pšenice, ale z hektaru dává nižší výnos.",https://thumb.wikimedia.org/wikipedia/commons/thumb/0/03/2009-06-20_Silvolde_02_dinkel.jpg/1920px-2009-06-20_Silvolde_02_dinkel.jpg,A,105,75
 
 `;
 
@@ -821,12 +941,12 @@ Spelt,Špalda,🌾,grains,"Lower-impact whole grain related to wheat, often grow
       cs: {
         station: "Stanoviště 1",
         title: "Rozlušti talíř",
-        time: "XX minut",
+        time: "10 minut",
         goalLabel: "Cíl:",
         goal: "Zjistěte, jak má vypadat talíř na celý den, který je zároveň nutričně vyvážený a šetrný k naší planetě!",
         steps: [
           "Dvojklikem na části talíře zjistětě více informací o dané kategorii — kolik procent z denního jídla představuje přesně, k čemu tato kategorie slouží a jaký má dopad na životní prostředí ",
-          "Poté postupně přesuňte všech XX karet potravin do správných kategorií",
+          "Poté postupně přesuňte všech 45 karet potravin do správných kategorií",
           "Pokud si nejste jisti dvojklikem na kartu potraviny si zjistíte více informací",
           "Tyto informace si můžeš kdykoliv zobrazit znovu klikem na tlačítko i v levém horním rohu"
         ],
@@ -837,12 +957,12 @@ Spelt,Špalda,🌾,grains,"Lower-impact whole grain related to wheat, often grow
       en: {
         station: "Station 1",
         title: "Untangle the plate",
-        time: "XX minutes",
+        time: "10 minutes",
         goalLabel: "Goal:",
         goal: "Find out what a plate for the whole day should look like — one that is both nutritionally balanced and kind to our planet!",
         steps: [
           "Double-click on sections of the plate to find out more about a given category — exactly what percentage of your daily food intake it represents, what purpose it serves, and its environmental impact.",
-          "Sort the 30 food cards into the sections and into the fields Drinks, Oils and fats, and Off the plate.",
+          "Sort the 45 food cards into the sections and into the fields Drinks, Oils and fats, and Off the plate.",
           "If you are unsure, you can find more information by double-clicking on the food item card.",
           "You can view this information again at any time by clicking the 'i' button in the top-left corner."
         ],
@@ -929,19 +1049,398 @@ Spelt,Špalda,🌾,grains,"Lower-impact whole grain related to wheat, often grow
 
     /* =====================================================================
        5c. GROUP POPUP CONTENT  (double-click a section of the plate)
-       One HTML template per group and language (fill these in).
-       Placeholders: {label} {hint} {id}. Style it with CSS inside #popupBody.
+       One HTML template per group and language.
+       Placeholders: {label} {hint} {id} {color} (the section colour).
+       Building blocks (styled in the CSS block "group info popup"):
+         .g-lead   short intro             .g-stats / .g-stat  three number tiles
+         .g-bar    bar = share of energy   h3 + ul             "role in the diet" list
+         .g-tip    yellow tip box          .g-source           small source line
+       Numbers: EAT-Lancet Commission 2025, Table 1 (adult, ~2400 kcal/day).
        A missing language falls back to English; a missing group shows just its label and hint.
        ===================================================================== */
+    const GROUP_SOURCE = {
+      en: "Source: EAT-Lancet Commission 2025. Values for an average adult eating about 2,400 kcal a day. Growing teenagers may need more food, but the proportions stay similar.",
+      cs: "Zdroj: Komise EAT-Lancet 2025. Hodnoty pro průměrného dospělého s příjmem asi 2 400 kcal denně. Dospívající, kteří ještě rostou, mohou potřebovat víc jídla, poměry ale zůstávají podobné.",
+    };
+
     const GROUP_INFO = {
-      grains: { en: `<h2>{label}</h2><p>HTML for Whole Grains (English)</p>`, cs: `<h2>{label}</h2><p>HTML pro celozrnné obiloviny (česky)</p>` },
-      starchy: { en: `<h2>{label}</h2><p>HTML for Starchy Vegetables (English)</p>`, cs: `<h2>{label}</h2><p>HTML pro škrobovou zeleninu (česky)</p>` },
-      oils: { en: `<h2>{label}</h2><p>HTML for Unsaturated Plant Oils (English)</p>`, cs: `<h2>{label}</h2><p>HTML pro rostlinné oleje (česky)</p>` },
-      sugarsalt: { en: `<h2>{label}</h2><p>HTML for Added Sugars & Salt (English)</p>`, cs: `<h2>{label}</h2><p>HTML pro cukr a sůl (česky)</p>` },
-      animal: { en: `<h2>{label}</h2><p>HTML for Animal Protein (English)</p>`, cs: `<h2>{label}</h2><p>HTML pro Živočišné bílkoviny (česky)</p>` },
-      dairy: { en: `<h2>{label}</h2><p>HTML for Dairy Foods (English)</p>`, cs: `<h2>{label}</h2><p>HTML pro mléčné výrobky (česky)</p>` },
-      plant: { en: `<h2>{label}</h2><p>HTML for Plant Protein (English)</p>`, cs: `<h2>{label}</h2><p>HTML pro rostlinné bílkoviny (česky)</p>` },
-      veg: { en: `<h2>{label}</h2><p>HTML for Vegetables & Fruits (English)</p>`, cs: `<h2>{label}</h2><p>HTML pro zeleninu a ovoce (česky)</p>` },
+      veg: {
+        en: `
+<div class="group-info" style="--g-color:{color}">
+  <h2>{label}</h2>
+  <p class="g-lead">Half of the plate! By weight this is the biggest group, but it gives only about a tenth of your daily energy, because fruit and vegetables are mostly water and fibre.</p>
+  <div class="g-stats">
+    <div class="g-stat"><b>10 %</b><span>of daily energy</span></div>
+    <div class="g-stat"><b>500 g</b><span>a day (300 g veg + 200 g fruit)</span></div>
+    <div class="g-stat"><b>5+</b><span>servings a day</span></div>
+  </div>
+  <div class="g-bar"><span style="width:10%"></span></div>
+  <h3>Role in your diet</h3>
+  <ul>
+    <li><b>Vitamins</b> – C for immunity, A from orange foods, K and folate from green leaves.</li>
+    <li><b>Minerals</b> – e.g. potassium, which helps keep blood pressure healthy.</li>
+    <li><b>Fibre</b> and protective plant compounds (antioxidants).</li>
+    <li>Lower risk of heart disease, stroke, some cancers and weight gain.</li>
+  </ul>
+  <h3>Planet</h3>
+  <p>Usually the lowest footprint of all foods. Seasonal and local is best; fruit flown in by plane or grown in heated greenhouses has a much bigger one.</p>
+  <p class="g-tip">Eat the rainbow: pick different colours every day, especially dark green and orange.</p>
+  <p class="g-source">{source}</p>
+</div>`,
+        cs: `
+<div class="group-info" style="--g-color:{color}">
+  <h2>{label}</h2>
+  <p class="g-lead">Polovina talíře! Podle hmotnosti je to největší skupina, ale dodává jen asi desetinu denní energie, protože ovoce a zelenina jsou hlavně voda a vláknina.</p>
+  <div class="g-stats">
+    <div class="g-stat"><b>10 %</b><span>denní energie</span></div>
+    <div class="g-stat"><b>500 g</b><span>denně (300 g zeleniny + 200 g ovoce)</span></div>
+    <div class="g-stat"><b>5+</b><span>porcí denně</span></div>
+  </div>
+  <div class="g-bar"><span style="width:10%"></span></div>
+  <h3>K čemu slouží</h3>
+  <ul>
+    <li><b>Vitaminy</b> – C pro imunitu, A z oranžových potravin, K a kyselina listová ze zelených listů.</li>
+    <li><b>Minerály</b> – např. draslík, který pomáhá udržet zdravý krevní tlak.</li>
+    <li><b>Vláknina</b> a ochranné rostlinné látky (antioxidanty).</li>
+    <li>Nižší riziko nemocí srdce, mrtvice, některých druhů rakoviny a přibírání na váze.</li>
+  </ul>
+  <h3>Planeta</h3>
+  <p>Obvykle nejnižší stopa ze všech potravin. Nejlepší je sezónní a místní; ovoce dovezené letadlem nebo vypěstované ve vytápěném skleníku má stopu mnohem vyšší.</p>
+  <p class="g-tip">Jez duhu: vybírej každý den různé barvy, hlavně tmavě zelenou a oranžovou.</p>
+  <p class="g-source">{source}</p>
+</div>`,
+      },
+
+      grains: {
+        en: `
+<div class="group-info" style="--g-color:{color}">
+  <h2>{label}</h2>
+  <p class="g-lead">The biggest source of energy on the planetary plate. "Whole" means the grain keeps all three parts: the bran, the germ and the starchy inside.</p>
+  <div class="g-stats">
+    <div class="g-stat"><b>31 %</b><span>of daily energy</span></div>
+    <div class="g-stat"><b>210 g</b><span>a day (dry weight)</span></div>
+    <div class="g-stat"><b>3 meals</b><span>e.g. oatmeal, bread, rice or pasta</span></div>
+  </div>
+  <div class="g-bar"><span style="width:31%"></span></div>
+  <h3>Role in your diet</h3>
+  <ul>
+    <li><b>Energy</b> – complex carbohydrates (starch) release energy slowly, so you stay full and focused longer.</li>
+    <li><b>Fibre</b> – keeps digestion working and feeds good gut bacteria.</li>
+    <li><b>B vitamins, iron, magnesium</b> and some protein.</li>
+    <li>Whole grains instead of white bread and white rice lower the risk of heart disease, type 2 diabetes and colon cancer.</li>
+  </ul>
+  <h3>Planet</h3>
+  <p>Grains feed the most people from the least land. Rice is the exception: flooded rice fields release methane.</p>
+  <p class="g-tip">Check the label: whole-grain flour should be the first ingredient.</p>
+  <p class="g-source">{source}</p>
+</div>`,
+        cs: `
+<div class="group-info" style="--g-color:{color}">
+  <h2>{label}</h2>
+  <p class="g-lead">Největší zdroj energie na planetárním talíři. „Celozrnné“ znamená, že zrno si ponechává všechny tři části: otruby, klíček i škrobové jádro.</p>
+  <div class="g-stats">
+    <div class="g-stat"><b>31 %</b><span>denní energie</span></div>
+    <div class="g-stat"><b>210 g</b><span>denně (v suchém stavu)</span></div>
+    <div class="g-stat"><b>3 jídla</b><span>např. ovesná kaše, chléb, rýže nebo těstoviny</span></div>
+  </div>
+  <div class="g-bar"><span style="width:31%"></span></div>
+  <h3>K čemu slouží</h3>
+  <ul>
+    <li><b>Energie</b> – složené sacharidy (škrob) uvolňují energii pomalu, takže vydržíš déle sytý a soustředěný.</li>
+    <li><b>Vláknina</b> – pomáhá trávení a živí prospěšné střevní bakterie.</li>
+    <li><b>Vitaminy B, železo, hořčík</b> a trochu bílkovin.</li>
+    <li>Celozrnné obiloviny místo bílého pečiva a bílé rýže snižují riziko nemocí srdce, cukrovky 2. typu a rakoviny tlustého střeva.</li>
+  </ul>
+  <h3>Planeta</h3>
+  <p>Obiloviny nasytí nejvíc lidí z nejmenší plochy půdy. Výjimkou je rýže: zaplavená rýžová pole uvolňují metan.</p>
+  <p class="g-tip">Čti etiketu: celozrnná mouka by měla být na prvním místě ve složení.</p>
+  <p class="g-source">{source}</p>
+</div>`,
+      },
+
+      starchy: {
+        en: `
+<div class="group-info" style="--g-color:{color}">
+  <h2>{label}</h2>
+  <p class="g-lead">Potatoes and other roots and tubers store their energy as starch. They are filling and cheap, but on the planetary plate their portion is small.</p>
+  <div class="g-stats">
+    <div class="g-stat"><b>5 %</b><span>of daily energy</span></div>
+    <div class="g-stat"><b>50 g</b><span>a day (0–100 g)</span></div>
+    <div class="g-stat"><b>≈ 2</b><span>servings of potatoes a week</span></div>
+  </div>
+  <div class="g-bar"><span style="width:2%"></span></div>
+  <h3>Role in your diet</h3>
+  <ul>
+    <li><b>Energy</b> from starch, plus vitamin C and potassium.</li>
+    <li><b>Fibre</b> – mostly in the skin, so cook them unpeeled.</li>
+    <li><b>Why so little?</b> They have less fibre and fewer vitamins and minerals than whole grains, and eating many potatoes – especially fried – is linked to weight gain and type 2 diabetes.</li>
+  </ul>
+  <h3>Planet</h3>
+  <p>Very low footprint: potatoes give a lot of food from a small field and grow well in Czechia.</p>
+  <p class="g-tip">Boiled or baked potatoes are fine; fries and chips belong with the treats.</p>
+  <p class="g-source">{source}</p>
+</div>`,
+        cs: `
+<div class="group-info" style="--g-color:{color}">
+  <h2>{label}</h2>
+  <p class="g-lead">Brambory a další kořeny a hlízy si ukládají energii ve formě škrobu. Dobře zasytí a jsou levné, na planetárním talíři je ale jejich porce malá.</p>
+  <div class="g-stats">
+    <div class="g-stat"><b>5 %</b><span>denní energie</span></div>
+    <div class="g-stat"><b>50 g</b><span>denně (0–100 g)</span></div>
+    <div class="g-stat"><b>≈ 2</b><span>porce brambor týdně</span></div>
+  </div>
+  <div class="g-bar"><span style="width:2%"></span></div>
+  <h3>K čemu slouží</h3>
+  <ul>
+    <li><b>Energie</b> ze škrobu, k tomu vitamin C a draslík.</li>
+    <li><b>Vláknina</b> – hlavně ve slupce, proto je vař neoloupané.</li>
+    <li><b>Proč tak málo?</b> Mají méně vlákniny, vitaminů a minerálů než celozrnné obiloviny a vysoká spotřeba brambor – hlavně smažených – souvisí s přibíráním na váze a cukrovkou 2. typu.</li>
+  </ul>
+  <h3>Planeta</h3>
+  <p>Velmi nízká stopa: brambory dají hodně jídla z malého pole a v Česku se jim dobře daří.</p>
+  <p class="g-tip">Vařené nebo pečené brambory ano; hranolky a chipsy patří mezi pamlsky.</p>
+  <p class="g-source">{source}</p>
+</div>`,
+      },
+
+      plant: {
+        en: `
+<div class="group-info" style="--g-color:{color}">
+  <h2>{label}</h2>
+  <p class="g-lead">The main protein source of the planetary plate: legumes (beans, lentils, peas, soy), nuts and seeds.</p>
+  <div class="g-stats">
+    <div class="g-stat"><b>23 %</b><span>of daily energy</span></div>
+    <div class="g-stat"><b>125 g</b><span>a day (75 g legumes + 50 g nuts, dry)</span></div>
+    <div class="g-stat"><b>3–5</b><span>servings a day, at least one of nuts</span></div>
+  </div>
+  <div class="g-bar"><span style="width:23%"></span></div>
+  <h3>Role in your diet</h3>
+  <ul>
+    <li><b>Protein</b> for building and repairing muscles and other tissues.</li>
+    <li><b>Fibre</b> – something meat and dairy do not have at all.</li>
+    <li><b>Unsaturated fats, iron, zinc, magnesium</b> and folate.</li>
+    <li>Lower risk of heart disease and type 2 diabetes, especially when they replace red meat.</li>
+    <li>Mix sources (e.g. beans + grains) to get all the essential amino acids. If you eat no animal foods at all, you need vitamin B12 from fortified foods or supplements.</li>
+  </ul>
+  <h3>Planet</h3>
+  <p>The most climate-friendly protein. Legumes take nitrogen from the air, so they need little fertilizer and can even improve the soil.</p>
+  <p class="g-tip">Lentil soup, hummus, tofu or a handful of nuts – something from this group every day.</p>
+  <p class="g-source">{source}</p>
+</div>`,
+        cs: `
+<div class="group-info" style="--g-color:{color}">
+  <h2>{label}</h2>
+  <p class="g-lead">Hlavní zdroj bílkovin na planetárním talíři: luštěniny (fazole, čočka, hrách, sója), ořechy a semínka.</p>
+  <div class="g-stats">
+    <div class="g-stat"><b>23 %</b><span>denní energie</span></div>
+    <div class="g-stat"><b>125 g</b><span>denně (75 g luštěnin + 50 g ořechů, v suchém stavu)</span></div>
+    <div class="g-stat"><b>3–5</b><span>porcí denně, aspoň jedna z ořechů</span></div>
+  </div>
+  <div class="g-bar"><span style="width:23%"></span></div>
+  <h3>K čemu slouží</h3>
+  <ul>
+    <li><b>Bílkoviny</b> pro stavbu a obnovu svalů a dalších tkání.</li>
+    <li><b>Vláknina</b> – tu maso ani mléčné výrobky vůbec nemají.</li>
+    <li><b>Nenasycené tuky, železo, zinek, hořčík</b> a kyselina listová.</li>
+    <li>Nižší riziko nemocí srdce a cukrovky 2. typu, hlavně když nahrazují červené maso.</li>
+    <li>Kombinuj zdroje (např. fazole + obiloviny), abys získal všechny esenciální aminokyseliny. Kdo nejí vůbec žádné živočišné potraviny, potřebuje vitamin B12 z obohacených potravin nebo doplňků.</li>
+  </ul>
+  <h3>Planeta</h3>
+  <p>Zdroj bílkovin nejšetrnější ke klimatu. Luštěniny si berou dusík ze vzduchu, takže potřebují málo hnojiv a mohou dokonce zlepšovat půdu.</p>
+  <p class="g-tip">Čočková polévka, hummus, tofu nebo hrst ořechů – něco z této skupiny každý den.</p>
+  <p class="g-source">{source}</p>
+</div>`,
+      },
+
+      animal: {
+        en: `
+<div class="group-info" style="--g-color:{color}">
+  <h2>{label}</h2>
+  <p class="g-lead">Meat, fish and eggs are optional on the planetary plate: small amounts are fine, but you do not need them every day.</p>
+  <div class="g-stats">
+    <div class="g-stat"><b>6 %</b><span>of daily energy</span></div>
+    <div class="g-stat"><b>90 g</b><span>a day in total (0–215 g)</span></div>
+    <div class="g-stat"><b>Weekly</b><span>2× fish, 2× poultry, 2 eggs, 1× red meat</span></div>
+  </div>
+  <div class="g-bar"><span style="width:6%"></span></div>
+  <h3>Role in your diet</h3>
+  <ul>
+    <li><b>Complete protein</b> and <b>vitamin B12</b>, which is found naturally only in animal foods.</li>
+    <li><b>Iron and zinc</b> in a form the body absorbs easily.</li>
+    <li><b>Fish</b> – omega-3 fats for the brain and heart.</li>
+    <li><b>Red meat</b> contains saturated fat; eating a lot is linked to heart disease and type 2 diabetes, and processed meat (sausages, ham) to colon cancer.</li>
+  </ul>
+  <h3>Planet</h3>
+  <p>The biggest footprint on the plate: animals need feed, land and water, and cattle produce methane. A kilogram of beef has about ten times the footprint of a kilogram of chicken.</p>
+  <p class="g-tip">At most about 2 servings of animal foods a day – one of dairy and one other.</p>
+  <p class="g-source">{source}</p>
+</div>`,
+        cs: `
+<div class="group-info" style="--g-color:{color}">
+  <h2>{label}</h2>
+  <p class="g-lead">Maso, ryby a vejce jsou na planetárním talíři volitelné: malé množství je v pořádku, ale nepotřebuješ je každý den.</p>
+  <div class="g-stats">
+    <div class="g-stat"><b>6 %</b><span>denní energie</span></div>
+    <div class="g-stat"><b>90 g</b><span>denně celkem (0–215 g)</span></div>
+    <div class="g-stat"><b>Týdně</b><span>2× ryba, 2× drůbež, 2 vejce, 1× červené maso</span></div>
+  </div>
+  <div class="g-bar"><span style="width:6%"></span></div>
+  <h3>K čemu slouží</h3>
+  <ul>
+    <li><b>Plnohodnotné bílkoviny</b> a <b>vitamin B12</b>, který se přirozeně vyskytuje jen v živočišných potravinách.</li>
+    <li><b>Železo a zinek</b> ve formě, kterou tělo snadno vstřebá.</li>
+    <li><b>Ryby</b> – omega-3 tuky pro mozek a srdce.</li>
+    <li><b>Červené maso</b> obsahuje nasycené tuky; jeho vysoká spotřeba souvisí s nemocemi srdce a cukrovkou 2. typu a zpracované maso (párky, šunka) s rakovinou tlustého střeva.</li>
+  </ul>
+  <h3>Planeta</h3>
+  <p>Největší stopa na talíři: zvířata potřebují krmivo, půdu a vodu a skot vypouští metan. Kilogram hovězího má zhruba desetkrát větší stopu než kilogram kuřecího.</p>
+  <p class="g-tip">Nejvýše asi 2 porce živočišných potravin denně – jedna mléčná a jedna jiná.</p>
+  <p class="g-source">{source}</p>
+</div>`,
+      },
+
+      dairy: {
+        en: `
+<div class="group-info" style="--g-color:{color}">
+  <h2>{label}</h2>
+  <p class="g-lead">Milk and the foods made from it: yoghurt, kefir, cheese, cottage cheese and butter. One serving a day is enough.</p>
+  <div class="g-stats">
+    <div class="g-stat"><b>6 %</b><span>of daily energy</span></div>
+    <div class="g-stat"><b>250 g</b><span>of milk or equivalent a day (0–500 g)</span></div>
+    <div class="g-stat"><b>1</b><span>serving: a glass of milk, a yoghurt or a slice of cheese</span></div>
+  </div>
+  <div class="g-bar"><span style="width:6%"></span></div>
+  <h3>Role in your diet</h3>
+  <ul>
+    <li><b>Calcium</b> for bones and teeth – important while you are still growing.</li>
+    <li><b>Protein, vitamins B2 and B12, iodine.</b></li>
+    <li>Fermented dairy (yoghurt, kefir) may be extra good for the gut.</li>
+    <li>Dairy fat is mostly <b>saturated</b> and raises "bad" LDL cholesterol. Butter is almost pure fat – only about 5 g a day.</li>
+    <li>No milk? Get calcium from fortified plant drinks, tofu, green vegetables, nuts and seeds.</li>
+  </ul>
+  <h3>Planet</h3>
+  <p>Dairy cows need feed and release methane. Cheese and butter are concentrated milk, so their footprint per kilogram is high.</p>
+  <p class="g-tip">Plain yoghurt with fruit and oats makes a great breakfast.</p>
+  <p class="g-source">{source}</p>
+</div>`,
+        cs: `
+<div class="group-info" style="--g-color:{color}">
+  <h2>{label}</h2>
+  <p class="g-lead">Mléko a potraviny z něj: jogurt, kefír, sýr, tvaroh a máslo. Stačí jedna porce denně.</p>
+  <div class="g-stats">
+    <div class="g-stat"><b>6 %</b><span>denní energie</span></div>
+    <div class="g-stat"><b>250 g</b><span>mléka nebo ekvivalentu denně (0–500 g)</span></div>
+    <div class="g-stat"><b>1</b><span>porce: sklenice mléka, jogurt nebo plátek sýra</span></div>
+  </div>
+  <div class="g-bar"><span style="width:6%"></span></div>
+  <h3>K čemu slouží</h3>
+  <ul>
+    <li><b>Vápník</b> pro kosti a zuby – důležitý, dokud ještě rosteš.</li>
+    <li><b>Bílkoviny, vitaminy B2 a B12, jód.</b></li>
+    <li>Kysané mléčné výrobky (jogurt, kefír) mohou navíc prospívat střevům.</li>
+    <li>Mléčný tuk je hlavně <b>nasycený</b> a zvyšuje „špatný“ LDL cholesterol. Máslo je téměř čistý tuk – jen asi 5 g denně.</li>
+    <li>Nepiješ mléko? Vápník získáš z obohacených rostlinných nápojů, tofu, zelené zeleniny, ořechů a semínek.</li>
+  </ul>
+  <h3>Planeta</h3>
+  <p>Dojnice potřebují krmivo a vypouštějí metan. Sýr a máslo jsou zahuštěné mléko, proto mají vysokou stopu na kilogram.</p>
+  <p class="g-tip">Bílý jogurt s ovocem a ovesnými vločkami je skvělá snídaně.</p>
+  <p class="g-source">{source}</p>
+</div>`,
+      },
+
+      oils: {
+        en: `
+<div class="group-info" style="--g-color:{color}">
+  <h2>{label}</h2>
+  <p class="g-lead">Liquid plant oils such as rapeseed, olive and sunflower oil. A small amount with a lot of energy: a gram of fat has more than twice the calories of a gram of carbohydrate or protein.</p>
+  <div class="g-stats">
+    <div class="g-stat"><b>15 %</b><span>of daily energy</span></div>
+    <div class="g-stat"><b>40 g</b><span>a day (20–80 g)</span></div>
+    <div class="g-stat"><b>≈ 3</b><span>tablespoons a day</span></div>
+  </div>
+  <div class="g-bar"><span style="width:15%"></span></div>
+  <h3>Role in your diet</h3>
+  <ul>
+    <li><b>Essential fatty acids</b> (omega-3 and omega-6) that your body cannot make itself.</li>
+    <li>Help you absorb <b>vitamins A, D, E and K</b>; oils also contain vitamin E.</li>
+    <li>Using plant oils instead of butter or lard lowers "bad" LDL cholesterol and the risk of heart disease.</li>
+    <li>Palm and coconut oil are high in saturated fat – at most about 6 g a day.</li>
+  </ul>
+  <h3>Planet</h3>
+  <p>Lower footprint than butter or lard. Rapeseed oil is grown in Czechia; palm oil plantations have caused deforestation in the tropics.</p>
+  <p class="g-tip">Rapeseed oil for cooking, olive oil for salads.</p>
+  <p class="g-source">{source}</p>
+</div>`,
+        cs: `
+<div class="group-info" style="--g-color:{color}">
+  <h2>{label}</h2>
+  <p class="g-lead">Tekuté rostlinné oleje jako řepkový, olivový nebo slunečnicový. Malé množství s velkou energií: gram tuku má víc než dvakrát tolik kalorií než gram sacharidů nebo bílkovin.</p>
+  <div class="g-stats">
+    <div class="g-stat"><b>15 %</b><span>denní energie</span></div>
+    <div class="g-stat"><b>40 g</b><span>denně (20–80 g)</span></div>
+    <div class="g-stat"><b>≈ 3</b><span>polévkové lžíce denně</span></div>
+  </div>
+  <div class="g-bar"><span style="width:15%"></span></div>
+  <h3>K čemu slouží</h3>
+  <ul>
+    <li><b>Esenciální mastné kyseliny</b> (omega-3 a omega-6), které si tělo neumí vyrobit samo.</li>
+    <li>Pomáhají vstřebat <b>vitaminy A, D, E a K</b>; oleje navíc obsahují vitamin E.</li>
+    <li>Rostlinné oleje místo másla nebo sádla snižují „špatný“ LDL cholesterol a riziko nemocí srdce.</li>
+    <li>Palmový a kokosový olej mají hodně nasycených tuků – nejvýše asi 6 g denně.</li>
+  </ul>
+  <h3>Planeta</h3>
+  <p>Nižší stopa než máslo nebo sádlo. Řepka se pěstuje v Česku; kvůli plantážím palmy olejné se v tropech kácí pralesy.</p>
+  <p class="g-tip">Řepkový olej na vaření, olivový do salátu.</p>
+  <p class="g-source">{source}</p>
+</div>`,
+      },
+
+      sugarsalt: {
+        en: `
+<div class="group-info" style="--g-color:{color}">
+  <h2>{label}</h2>
+  <p class="g-lead">Foods with lots of added sugar or salt: sweets, soda, chips and pastries. They are treats, not everyday food.</p>
+  <div class="g-stats">
+    <div class="g-stat"><b>max 5 %</b><span>of daily energy from added sugar</span></div>
+    <div class="g-stat"><b>≤ 30 g</b><span>added sugar a day (≈ 7 teaspoons)</span></div>
+    <div class="g-stat"><b>≤ 5 g</b><span>salt a day (≈ 1 teaspoon)</span></div>
+  </div>
+  <div class="g-bar"><span style="width:5%"></span></div>
+  <h3>Role in your diet</h3>
+  <ul>
+    <li><b>Added sugar</b> gives energy but no vitamins, minerals or fibre – "empty calories".</li>
+    <li><b>Sugary drinks</b> are linked to weight gain, type 2 diabetes, heart disease and tooth decay.</li>
+    <li><b>Too much salt</b> (sodium) raises blood pressure.</li>
+    <li>Many ultra-processed foods hide sugar and salt – read the label. The natural sugar in whole fruit does not count as added sugar.</li>
+  </ul>
+  <h3>Planet</h3>
+  <p>Sugar crops and processing use land, water and energy to make food with almost no nutrients, and snacks and drinks create a lot of packaging waste.</p>
+  <p class="g-tip">One can of soda (≈ 35 g of sugar) is more than the whole daily limit. Water is the best drink.</p>
+  <p class="g-source">{source}</p>
+</div>`,
+        cs: `
+<div class="group-info" style="--g-color:{color}">
+  <h2>{label}</h2>
+  <p class="g-lead">Potraviny s velkým množstvím přidaného cukru nebo soli: sladkosti, limonády, chipsy a sladké pečivo. Jsou to pamlsky, ne každodenní jídlo.</p>
+  <div class="g-stats">
+    <div class="g-stat"><b>max 5 %</b><span>denní energie z přidaného cukru</span></div>
+    <div class="g-stat"><b>≤ 30 g</b><span>přidaného cukru denně (≈ 7 čajových lžiček)</span></div>
+    <div class="g-stat"><b>≤ 5 g</b><span>soli denně (≈ 1 čajová lžička)</span></div>
+  </div>
+  <div class="g-bar"><span style="width:5%"></span></div>
+  <h3>K čemu slouží</h3>
+  <ul>
+    <li><b>Přidaný cukr</b> dodává energii, ale žádné vitaminy, minerály ani vlákninu – „prázdné kalorie“.</li>
+    <li><b>Slazené nápoje</b> souvisejí s přibíráním na váze, cukrovkou 2. typu, nemocemi srdce a zubním kazem.</li>
+    <li><b>Příliš mnoho soli</b> (sodíku) zvyšuje krevní tlak.</li>
+    <li>Mnoho ultrazpracovaných potravin skrývá cukr a sůl – čti etikety. Přirozený cukr v celém ovoci se do přidaného cukru nepočítá.</li>
+  </ul>
+  <h3>Planeta</h3>
+  <p>Pěstování a zpracování cukru spotřebuje půdu, vodu a energii na jídlo téměř bez živin a pamlsky a nápoje vytvářejí hodně odpadu z obalů.</p>
+  <p class="g-tip">Jedna plechovka limonády (≈ 35 g cukru) je víc než celý denní limit. Nejlepší nápoj je voda.</p>
+  <p class="g-source">{source}</p>
+</div>`,
+      },
     };
 
     /* =====================================================================
@@ -1056,8 +1555,8 @@ Spelt,Špalda,🌾,grains,"Lower-impact whole grain related to wheat, often grow
 
     function drawLabel(c) {
 
-      if (c.id == "oils") {
-        CONFIG.labelDistance = CONFIG.labelDistance + 20
+      if (c.id == "starchy") {
+        CONFIG.labelDistance = CONFIG.labelDistance + 10
       }
 
       const edge = polar(R + CONFIG.plateRim, c.mid);                       // where the line starts (plate edge)
@@ -1089,8 +1588,8 @@ Spelt,Špalda,🌾,grains,"Lower-impact whole grain related to wheat, often grow
       const box = svgEl("foreignObject", { x, y, width: W, height: H, class: "label-object" }, svg);
       box.innerHTML = `<div class="label-wrap" style="align-items:${align}; justify-content:${justify}; text-align:${textAlign}">${html}</div>`;
 
-      if (c.id == "oils") {
-        CONFIG.labelDistance = CONFIG.labelDistance - 20
+      if (c.id == "starchy") {
+        CONFIG.labelDistance = CONFIG.labelDistance - 10
       }
 
     }
@@ -1207,7 +1706,10 @@ Spelt,Špalda,🌾,grains,"Lower-impact whole grain related to wheat, often grow
     function openGroupPopup(c) {
       const entry = GROUP_INFO[c.id] || {};
       const template = entry[currentLang] || entry.en || "<h2>{label}</h2><p>{hint}</p>";
-      openPopup(fill(template, { id: c.id, label: tr(c.label), hint: tr(c.hint || "") }));
+      openPopup(fill(template, {
+        id: c.id, label: tr(c.label), hint: tr(c.hint || ""), color: c.color,
+        source: GROUP_SOURCE[currentLang] || GROUP_SOURCE.en,
+      }));
     }
 
     // close with the X button or by clicking the dark background (Esc works automatically)
