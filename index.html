@@ -13,6 +13,12 @@
        1. ADJUSTABLE STYLE SETTINGS  (fonts, colours, spacing)
        ===================================================================== */
     :root {
+
+      --plate-edge: #cfc6b2;
+      /* darker outer edge of the plate rim */
+      --plate-well: #e8e1d1;
+      /* slightly darker inner part where the food lies */
+
       color-scheme: dark;
 
       /* ---- font sizes ---- */
@@ -298,7 +304,7 @@
     }
 
     #popupBody h2 {
-      margin: 8px 0;
+      margin: 20px 0 8px;
       font-family: "Archivo Black", Impact, sans-serif;
       font-size: var(--font-popup-title);
       line-height: 1.1;
@@ -437,6 +443,8 @@
     }
 
     #popupBody .g-tip {
+      display: none;
+
       margin-top: 14px;
       padding: 8px 12px;
       border-left: 3px solid var(--accent);
@@ -446,6 +454,8 @@
     }
 
     #popupBody .g-source {
+      display: none;
+
       margin-top: 14px;
       font-size: var(--font-group-small);
       opacity: .75;
@@ -513,6 +523,8 @@
     }
 
     .portion {
+      display: none;
+
       margin-top: 0px;
       text-align: center;
       font-size: var(--font-climate);
@@ -781,12 +793,16 @@
       plateRim: 5,           // cream border around the plate
       marginX: 280,          // empty space left/right of the plate, used for labels
       marginY: 90,           // empty space above/below the plate
-      labelDistance: 70,     // how far the labels sit from the plate edge (try 26 for close, 90 for far)
+      labelDistance: 50,     // how far the labels sit from the plate edge (try 26 for close, 90 for far)
       showLeaderLines: true, // draw a thin line from each section to its label
       leaderLineWidth: 2,    // thickness of that line
       labelPadding: 8,       // small gap between the end of the line and the text
       startAngle: -45,       // rotates the whole plate, in degrees. 0 = first section starts at the top, positive = clockwise
       showPlacedFoods: false,
+
+      plateRim: 24,          // width of the plate's rim around the food (SVG units)
+      plateShadow: 0.35,     // darkness of the shadow under the plate (0 = none, 1 = black)
+      plateGloss: false,      // light reflection on the rim
 
 
       // ---- label template ----
@@ -831,7 +847,7 @@
       { id: "plant", label: "Plant Protein", hint: "", degrees: 50, color: "#9a6b3f" },
       { id: "sugarsalt", label: "With added Sugars & Salt", hint: "", degrees: 5, color: "#6a8fb0" },
       { id: "veg", label: "Vegetables & Fruits", hint: "", degrees: 180, color: "#5e9a4f" },
-      
+
     ];
 
     /* =====================================================================
@@ -951,7 +967,7 @@ Spelt,Špalda,🌾,grains,"An ancient type of wheat, eaten as whole grains or wh
           "Tyto informace si můžeš kdykoliv zobrazit znovu klikem na tlačítko i v levém horním rohu"
         ],
         notes: [
-          { html: "Třída A–E na kartičce = uhlíková stopa jedné běžné porce (A nejmenší, D největší)." }
+          { html: "Třída A–E na kartičce = uhlíková stopa jedné běžné porce (A nejmenší, E největší)." }
         ],
       },
       en: {
@@ -967,7 +983,7 @@ Spelt,Špalda,🌾,grains,"An ancient type of wheat, eaten as whole grains or wh
           "You can view this information again at any time by clicking the 'i' button in the top-left corner."
         ],
         notes: [
-          { html: "Class A–E on a card = the carbon footprint of one ordinary portion (A smallest, D largest)." },
+          { html: "Class A–E on a card = the carbon footprint of one ordinary portion (A smallest, E largest)." },
         ],
       },
     };
@@ -1526,9 +1542,52 @@ Spelt,Špalda,🌾,grains,"An ancient type of wheat, eaten as whole grains or wh
     const svg = $("wheel");
     svg.setAttribute("viewBox", `0 0 ${2 * CX} ${2 * CY}`);
 
+    /* ---------- the plate (drawn under and over the food sections) ---------- */
+    // gradient helper: stops = [[offset 0–1, css colour], ...]
+    function radialGradient(defs, id, radius, stops) {
+      const g = svgEl("radialGradient", { id, cx: CX, cy: CY, r: radius, gradientUnits: "userSpaceOnUse" }, defs);
+      stops.forEach(([offset, color]) => svgEl("stop", { offset, style: `stop-color:${color}` }, g));
+    }
+
+    // under the food: shadow, rim, the step into the well
+    function drawPlate() {
+      const rim = R + CONFIG.plateRim;
+      const defs = svgEl("defs", {}, svg);
+
+      // soft shadow under the plate
+      const blur = svgEl("filter", { id: "plateBlur", x: "-20%", y: "-20%", width: "140%", height: "140%" }, defs);
+      svgEl("feGaussianBlur", { stdDeviation: 9 }, blur);
+      svgEl("circle", { cx: CX, cy: CY + 10, r: rim, fill: "#000", opacity: CONFIG.plateShadow, filter: "url(#plateBlur)" }, svg);
+
+      // rim: light, getting darker towards the outer edge
+      radialGradient(defs, "plateRimGrad", rim, [[0, "var(--plate)"], [0.9, "var(--plate)"], [1, "var(--plate-edge)"]]);
+      svgEl("circle", { cx: CX, cy: CY, r: rim, fill: "url(#plateRimGrad)" }, svg);
+
+      // the step from the rim down into the well (a light line + a dark line)
+      svgEl("circle", { cx: CX, cy: CY, r: R + 6, fill: "none", stroke: "#fff", "stroke-width": 1.5, opacity: 0.8 }, svg);
+      svgEl("circle", { cx: CX, cy: CY, r: R + 4, fill: "var(--plate-well)", stroke: "var(--plate-edge)", "stroke-width": 1.5 }, svg);
+    }
+
+    // over the food: shading towards the edge of the well + a light reflection on the rim
+    function drawPlateShading() {
+      const defs = svg.querySelector("defs");
+      radialGradient(defs, "plateWellShade", R, [[0, "rgba(0,0,0,0)"], [0.82, "rgba(0,0,0,0)"], [1, "rgba(0,0,0,0.22)"]]);
+      svgEl("circle", { cx: CX, cy: CY, r: R, fill: "url(#plateWellShade)", "pointer-events": "none" }, svg);
+
+      if (CONFIG.plateGloss) {
+        const r = R + CONFIG.plateRim * 0.55;
+        const a = polar(r, -70), b = polar(r, -15);   // arc on the upper left of the rim
+        svgEl("path", {
+          d: `M ${a.x} ${a.y} A ${r} ${r} 0 0 1 ${b.x} ${b.y}`, fill: "none",
+          stroke: "#fff", "stroke-width": CONFIG.plateRim * 0.25, "stroke-linecap": "round", opacity: 0.7, "pointer-events": "none",
+        }, svg);
+      }
+    }
+
+
     function buildWheel() {
       svg.innerHTML = "";
-      svgEl("circle", { cx: CX, cy: CY, r: R + CONFIG.plateRim, fill: "var(--plate)" }, svg);
+      drawPlate();
 
       CATEGORIES.forEach((c) => {
         const path = svgEl("path", {
@@ -1549,6 +1608,7 @@ Spelt,Špalda,🌾,grains,"An ancient type of wheat, eaten as whole grains or wh
         path.addEventListener("dblclick", () => { clearTimeout(clickTimer); openGroupPopup(c); });
       });
 
+      drawPlateShading();
       CATEGORIES.forEach(drawLabel);
       if (CONFIG.showPlacedFoods) CATEGORIES.forEach(drawPlaced);
     }
@@ -1698,7 +1758,7 @@ Spelt,Špalda,🌾,grains,"An ancient type of wheat, eaten as whole grains or wh
       return `
     <div class="climate">
       <span class="climate-badge class-${cls.toLowerCase()}">${cls}</span>
-      <span class="climate-label"><b>${t.label}</b>${co2 ? ` · ≈ ${co2} g CO₂e ${t.perPortion}` : ""}</span>
+      <span class="climate-label"><b>${t.label}</b>${co2 ? ` · ≈ ${co2} g CO₂e ${t.perPortion}` : ""} (${portion} g)</span>
     </div>
     ${portion ? `<div class="portion">${t.portion} ${portion} g</div>` : ""}`;
     }
