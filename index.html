@@ -744,6 +744,16 @@
       cursor: pointer;
     }
 
+    /* confetti layer (drawn by JS, never blocks clicks) */
+    #confetti {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1000;
+    }
+
     @media (prefers-reduced-motion: reduce) {
       * {
         animation: none !important;
@@ -1697,20 +1707,122 @@ Spelt,Špalda,🌾,grains,"An ancient type of wheat, eaten as whole grains or wh
 
     function flash(el, cls) { el.classList.remove(cls); void el.getBBox(); el.classList.add(cls); }
 
+    /* ---------- answer feedback: sounds (Web Audio, no files needed) ---------- */
+    let audioCtx = null;
+    function tone(freq, start, duration, type = "sine", volume = 0.2, slideTo = null) {
+      try {
+        audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        const t0 = audioCtx.currentTime + start;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, t0);
+        if (slideTo) osc.frequency.exponentialRampToValueAtTime(slideTo, t0 + duration);
+        gain.gain.setValueAtTime(0.0001, t0);
+        gain.gain.exponentialRampToValueAtTime(volume, t0 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+        osc.connect(gain).connect(audioCtx.destination);
+        osc.start(t0); osc.stop(t0 + duration + 0.05);
+      } catch (e) { /* no audio available – the game works without it */ }
+    }
+    const sounds = {
+      // bright rising two-note chime
+      correct() { tone(660, 0, 0.18, "triangle"); tone(990, 0.1, 0.3, "triangle"); },
+      // low descending buzz
+      wrong() { tone(220, 0, 0.35, "square", 0.08, 140); },
+      // short victory fanfare
+      won() { [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.13, i === 3 ? 0.6 : 0.2, "triangle")); },
+    };
+
+    /* ---------- answer feedback: confetti particles ---------- */
+    const confetti = { canvas: null, ctx: null, parts: [], running: false };
+    const CONFETTI_COLORS = ["#e74c3c", "#f1c40f", "#2ecc71", "#3498db", "#9b59b6", "#ff8c42", "#ff6fb5"];
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    function burstConfetti(x, y, count = 60, power = 9) {
+      if (reducedMotion) count = Math.round(count / 4);
+      if (!confetti.canvas) {
+        confetti.canvas = document.createElement("canvas");
+        confetti.canvas.id = "confetti";
+        document.body.appendChild(confetti.canvas);
+        confetti.ctx = confetti.canvas.getContext("2d");
+      }
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = power * (0.4 + Math.random() * 0.8);
+        confetti.parts.push({
+          x, y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - power * 0.6,      // bias upwards
+          size: 6 + Math.random() * 6,
+          rot: Math.random() * Math.PI, spin: (Math.random() - 0.5) * 0.4,
+          color: CONFETTI_COLORS[(Math.random() * CONFETTI_COLORS.length) | 0],
+          round: Math.random() < 0.3,
+          life: 0, maxLife: 90 + Math.random() * 50,
+        });
+      }
+      if (!confetti.running) { confetti.running = true; requestAnimationFrame(stepConfetti); }
+    }
+
+    function stepConfetti() {
+      const { canvas, ctx } = confetti;
+      const dpr = window.devicePixelRatio || 1;
+      if (canvas.width !== innerWidth * dpr || canvas.height !== innerHeight * dpr) {
+        canvas.width = innerWidth * dpr; canvas.height = innerHeight * dpr;
+      }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, innerWidth, innerHeight);
+      confetti.parts = confetti.parts.filter((p) => p.life < p.maxLife && p.y < innerHeight + 40);
+      for (const p of confetti.parts) {
+        p.life++;
+        p.vy += 0.25;                 // gravity
+        p.vx *= 0.98; p.vy *= 0.98;   // air drag
+        p.x += p.vx; p.y += p.vy; p.rot += p.spin;
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, (p.maxLife - p.life) / 25);
+        ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+        ctx.fillStyle = p.color;
+        if (p.round) { ctx.beginPath(); ctx.arc(0, 0, p.size / 2.5, 0, Math.PI * 2); ctx.fill(); }
+        else ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);  // paper strip; spin fakes 3D
+        ctx.restore();
+      }
+      if (confetti.parts.length) requestAnimationFrame(stepConfetti);
+      else { confetti.running = false; ctx.clearRect(0, 0, innerWidth, innerHeight); }
+    }
+
+    // centre of an SVG element on screen (where the confetti starts)
+    function screenCenter(el) {
+      const r = el.getBoundingClientRect();
+      return [r.left + r.width / 2, r.top + r.height / 2];
+    }
+
     /* ---------- placing a food ---------- */
     function tryPlace(foodId, category) {
       const food = pool.find((f) => f.id === foodId);
       if (!food) return;
 
       if (food.category === category.id) {
+        const [cx, cy] = screenCenter(category.el);   // measure before the wheel is rebuilt
         pool = pool.filter((f) => f.id !== foodId);
         (placed[category.id] ||= []).push(food);
         selectedId = null;
         flash(category.el, "flash-good");
         buildWheel(); renderPool();
         say(pool.length ? ui().correct(foodName(food), tr(category.label)) : ui().won(mistakes), "good");
+        if (pool.length) {
+          sounds.correct();
+          burstConfetti(cx, cy);
+        } else {
+          // plate complete – big celebration from several points
+          sounds.won();
+          burstConfetti(cx, cy, 120, 12);
+          [0.2, 0.5, 0.8].forEach((fx, i) =>
+            setTimeout(() => burstConfetti(innerWidth * fx, innerHeight * 0.35, 80, 11), 250 + i * 250));
+        }
       } else {
         mistakes++;
+        sounds.wrong();
         flash(category.el, "flash-bad");
         const card = document.querySelector(`.card[data-id="${foodId}"]`);
         if (card) { card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake"); }
