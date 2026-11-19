@@ -821,7 +821,7 @@
       leaderLineWidth: 2,    // thickness of that line
       labelPadding: 8,       // small gap between the end of the line and the text
       startAngle: -45,       // rotates the whole plate, in degrees. 0 = first section starts at the top, positive = clockwise
-      showPlacedFoods: false,
+      showPlacedFoods: true,
 
       plateRim: 24,          // width of the plate's rim around the food (SVG units)
       plateShadow: 0.35,     // darkness of the shadow under the plate (0 = none, 1 = black)
@@ -853,6 +853,8 @@
       placedStartRadius: 0.86, // first picture sits at 86 % of the radius
       placedRowStep: 0.11,     // each next row moves 11 % of the radius inward
       twoColumnsAbove: 40,     // sections wider than this (degrees) use 2 columns
+      placedFill: 0.8,         // in narrow sections an icon may take up to 90 % of the section width (lower = smaller icons there)
+      placedMinScale: 0.35,    // icons never shrink below 35 % of --font-placed-icon
     };
 
     /* =====================================================================
@@ -1680,15 +1682,24 @@ Spelt,Špalda,🌾,grains,"An ancient type of wheat, eaten as whole grains or wh
     function drawPlaced(c) {
       const span = c.end - c.start;
       const columns = span >= CONFIG.twoColumnsAbove ? 2 : 1;
-      (placed[c.id] || []).forEach((food, k) => {
-        const row = Math.floor(k / columns), col = k % columns;
-        const radius = R * Math.max(0.2, CONFIG.placedStartRadius - CONFIG.placedRowStep * row);
-        const offset = columns === 2 ? (col ? 1 : -1) * span * 0.22 : 0;
-        const p = polar(radius, c.mid + offset);
-        const t = svgEl("text", { x: p.x, y: p.y, "text-anchor": "middle", "dominant-baseline": "central", class: "placed" }, svg);
-        t.textContent = food.emoji;
-        const title = svgEl("title", {}, t); title.textContent = foodName(food);
-      });
+      const items = placed[c.id] || [];
+      // full icon size comes from --font-placed-icon in the CSS
+      const base = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--font-placed-icon")) || 24;
+      let radius = R * CONFIG.placedStartRadius;
+      for (let i = 0; i < items.length; i += columns) {
+        // width of one slot at this distance from the centre -> shrink icon to fit narrow sections
+        const slotWidth = (span / columns) * Math.PI / 180 * radius * CONFIG.placedFill;
+        const size = Math.max(base * CONFIG.placedMinScale, Math.min(base, slotWidth));
+        items.slice(i, i + columns).forEach((food, col) => {
+          const offset = columns === 2 ? (col ? 1 : -1) * span * 0.22 : 0;
+          const p = polar(radius, c.mid + offset);
+          const t = svgEl("text", { x: p.x, y: p.y, "text-anchor": "middle", "dominant-baseline": "central", class: "placed", style: `font-size:${size}px` }, svg);
+          t.textContent = food.emoji;
+          const title = svgEl("title", {}, t); title.textContent = foodName(food);
+        });
+        // smaller icons -> rows packed closer together
+        radius = Math.max(R * 0.2, radius - R * CONFIG.placedRowStep * (size / base));
+      }
     }
 
     /* ---------- pool of foods ---------- */
